@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Should I Buy This Airbnb?</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f4; color: #1c1c1c; font-size: 15px; }
+  .app { max-width: 780px; margin: 0 auto; padding: 2rem 1rem 4rem; }
+  h1 { font-size: 24px; font-weight: 600; margin-bottom: 4px; }
+  .subtitle { color: #6b7280; font-size: 14px; margin-bottom: 1.5rem; }
+
+  /* Step bar */
+  .steps { display: flex; gap: 0; margin-bottom: 1.5rem; border-radius: 10px; overflow: hidden; border: 1px solid #e5e7eb; }
+  .step { flex: 1; padding: 10px 8px; font-size: 13px; text-align: center; color: #9ca3af; background: #fff; cursor: pointer; transition: background 0.15s; border-right: 1px solid #e5e7eb; }
+  .step:last-child { border-right: none; }
+  .step.active { background: #ede9fe; color: #5b21b6; font-weight: 600; }
+  .step.done { background: #f0fdf4; color: #166534; }
+
+  /* Cards */
+  .card { background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 1.25rem 1.5rem; margin-bottom: 1rem; }
+  .card-title { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: #9ca3af; margin-bottom: 1rem; }
+
+  /* Paste box */
+  .paste-area { width: 100%; border: 1.5px dashed #d1d5db; border-radius: 8px; padding: 12px; font-size: 13px; font-family: inherit; color: #374151; background: #f9fafb; resize: none; min-height: 70px; }
+  .paste-area:focus { outline: none; border-color: #7c3aed; background: #fff; }
+  .ai-btn { display: inline-flex; align-items: center; gap: 6px; margin-top: 8px; padding: 7px 14px; font-size: 13px; font-weight: 500; border: 1px solid #ddd6fe; border-radius: 8px; background: #ede9fe; color: #5b21b6; cursor: pointer; }
+  .ai-btn:hover { background: #ddd6fe; }
+  .ai-badge { font-size: 10px; background: #5b21b6; color: #fff; border-radius: 4px; padding: 1px 5px; }
+  .divider { display: flex; align-items: center; gap: 10px; margin: 1rem 0; }
+  .divider-line { flex: 1; height: 1px; background: #e5e7eb; }
+  .divider-text { font-size: 12px; color: #9ca3af; }
+
+  /* Form grid */
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .form-group { display: flex; flex-direction: column; gap: 4px; }
+  .form-group label { font-size: 12px; font-weight: 500; color: #6b7280; }
+  .form-group input, .form-group select {
+    padding: 8px 10px; font-size: 14px; font-family: inherit;
+    border: 1px solid #e5e7eb; border-radius: 8px; color: #1c1c1c; background: #fff;
+  }
+  .form-group input:focus, .form-group select:focus { outline: none; border-color: #7c3aed; }
+
+  /* Rate cards */
+  .rate-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 6px; }
+  .rate-card { border: 1.5px solid #e5e7eb; border-radius: 10px; padding: 12px; text-align: center; cursor: pointer; transition: all 0.15s; }
+  .rate-card:hover { border-color: #a78bfa; }
+  .rate-card.selected { border-color: #5b21b6; background: #ede9fe; }
+  .rate-card .rlabel { font-size: 11px; color: #9ca3af; margin-bottom: 4px; font-weight: 500; }
+  .rate-card .ramt { font-size: 22px; font-weight: 700; color: #1c1c1c; }
+  .rate-card.selected .ramt { color: #5b21b6; }
+  .rate-card .rsub { font-size: 11px; color: #9ca3af; margin-top: 3px; }
+
+  /* Action button */
+  .calc-btn { width: 100%; padding: 13px; font-size: 15px; font-weight: 600; background: #5b21b6; color: #fff; border: none; border-radius: 10px; cursor: pointer; margin-top: 4px; transition: background 0.15s; }
+  .calc-btn:hover { background: #4c1d95; }
+
+  /* Verdict */
+  .verdict { border-radius: 12px; padding: 1.25rem 1.5rem; display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem; }
+  .verdict.green { background: #f0fdf4; border: 1px solid #bbf7d0; }
+  .verdict.amber { background: #fffbeb; border: 1px solid #fde68a; }
+  .verdict.red { background: #fef2f2; border: 1px solid #fecaca; }
+  .verdict-icon { width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; }
+  .verdict.green .verdict-icon { background: #16a34a; }
+  .verdict.amber .verdict-icon { background: #d97706; }
+  .verdict.red .verdict-icon { background: #dc2626; }
+  .verdict-title { font-size: 16px; font-weight: 600; }
+  .verdict.green .verdict-title { color: #166534; }
+  .verdict.amber .verdict-title { color: #92400e; }
+  .verdict.red .verdict-title { color: #991b1b; }
+  .verdict-sub { font-size: 13px; margin-top: 3px; color: #6b7280; }
+  .tags { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 6px; }
+  .tag { font-size: 12px; font-weight: 500; padding: 3px 10px; border-radius: 99px; }
+  .tag-green { background: #dcfce7; color: #166534; }
+  .tag-amber { background: #fef3c7; color: #92400e; }
+  .tag-red { background: #fee2e2; color: #991b1b; }
+
+  /* Metrics */
+  .metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 1rem; }
+  .metric { background: #f9fafb; border-radius: 10px; padding: 12px 14px; }
+  .metric .ml { font-size: 11px; color: #9ca3af; font-weight: 500; margin-bottom: 4px; }
+  .metric .mv { font-size: 20px; font-weight: 700; color: #1c1c1c; }
+  .metric .ms { font-size: 11px; color: #9ca3af; margin-top: 2px; }
+
+  /* Sensitivity */
+  .sens-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid #f3f4f6; font-size: 13px; }
+  .sens-row:last-child { border-bottom: none; }
+  .sens-label { color: #6b7280; flex: 1; }
+  .pill { padding: 3px 10px; border-radius: 99px; font-size: 12px; font-weight: 600; }
+  .pill-green { background: #dcfce7; color: #166534; }
+  .pill-amber { background: #fef3c7; color: #92400e; }
+  .pill-red { background: #fee2e2; color: #991b1b; }
+  .sens-note { font-size: 12px; color: #9ca3af; }
+
+  /* Amortization */
+  .amort-bar { display: flex; height: 12px; border-radius: 99px; overflow: hidden; margin: 8px 0; }
+  .amort-p { background: #5b21b6; }
+  .amort-i { background: #c4b5fd; }
+  .legend { display: flex; gap: 16px; font-size: 12px; color: #6b7280; }
+  .legend span { display: flex; align-items: center; gap: 5px; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+  .extra-tip { font-size: 12px; color: #9ca3af; margin-top: 8px; padding: 8px 10px; background: #f9fafb; border-radius: 8px; border-left: 3px solid #c4b5fd; }
+
+  /* Panel visibility */
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  /* Section label */
+  .slabel { font-size: 14px; font-weight: 600; color: #374151; margin-bottom: 10px; }
+
+  .nav-btns { display: flex; gap: 10px; margin-top: 1rem; }
+  .nav-btn { flex: 1; padding: 10px; font-size: 14px; font-weight: 500; border: 1px solid #e5e7eb; border-radius: 8px; background: #fff; cursor: pointer; color: #374151; }
+  .nav-btn:hover { background: #f3f4f6; }
+  .nav-btn.primary { background: #5b21b6; color: #fff; border-color: #5b21b6; }
+  .nav-btn.primary:hover { background: #4c1d95; }
+
+  @media (max-width: 540px) {
+    .form-grid { grid-template-columns: 1fr; }
+    .metrics { grid-template-columns: 1fr 1fr; }
+    .rate-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <h1>Should I Buy This Airbnb?</h1>
+  <p class="subtitle">Short-term rental investment analyzer · MBA 6223 Finance</p>
+
+  <div class="steps">
+    <div class="step done" onclick="goTo(0)">1. Property</div>
+    <div class="step active" id="s1" onclick="goTo(1)">2. Financing</div>
+    <div class="step" id="s2" onclick="goTo(2)">3. Revenue</div>
+    <div class="step" id="s3" onclick="goTo(3)">4. Verdict</div>
+  </div>
+
+  <!-- PANEL 0: Property -->
+  <div class="panel active" id="p0">
+    <div class="card">
+      <div class="card-title">Import listing</div>
+      <textarea class="paste-area" id="pasteBox" placeholder="Paste a Zillow or Realtor.com listing description here and click Extract..."></textarea>
+      <button class="ai-btn" onclick="extractListing()"><span class="ai-badge">AI</span> Extract details automatically</button>
+      <div id="extractStatus" style="font-size:12px;color:#6b7280;margin-top:6px;"></div>
+      <div class="divider"><div class="divider-line"></div><div class="divider-text">or fill in manually</div><div class="divider-line"></div></div>
+      <div class="form-grid">
+        <div class="form-group"><label>Purchase price ($)</label><input type="number" id="price" value="485000" /></div>
+        <div class="form-group"><label>Down payment ($)</label><input type="number" id="down" value="97000" /></div>
+        <div class="form-group"><label>Bedrooms</label>
+          <select id="beds">
+            <option value="1">1 bedroom</option>
+            <option value="2">2 bedrooms</option>
+            <option value="3" selected>3 bedrooms</option>
+            <option value="4">4 bedrooms</option>
+            <option value="5">5+ bedrooms</option>
+          </select>
+        </div>
+        <div class="form-group"><label>City / Market</label><input type="text" id="city" value="Scottsdale, AZ" /></div>
+        <div class="form-group"><label>Renovation budget ($)</label><input type="number" id="reno" value="25000" /></div>
+        <div class="form-group"><label>Annual property tax ($)</label><input type="number" id="tax" value="6000" /></div>
+      </div>
+    </div>
+    <div class="nav-btns"><button class="nav-btn primary" onclick="goTo(1)">Next: Financing →</button></div>
+  </div>
+
+  <!-- PANEL 1: Financing -->
+  <div class="panel" id="p1">
+    <div class="card">
+      <div class="card-title">Mortgage details</div>
+      <div class="form-grid">
+        <div class="form-group"><label>Mortgage rate (%)</label><input type="number" id="rate" value="6.8" step="0.1" /></div>
+        <div class="form-group"><label>Loan term</label>
+          <select id="term">
+            <option value="30" selected>30-year fixed</option>
+            <option value="15">15-year fixed</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Extra monthly payment ($)</label><input type="number" id="extra" value="0" /></div>
+        <div class="form-group"><label>Annual insurance ($)</label><input type="number" id="insurance" value="2400" /></div>
+        <div class="form-group"><label>Management fee (%)</label><input type="number" id="mgmt" value="20" step="1" /></div>
+        <div class="form-group"><label>Cleaning fee per stay ($)</label><input type="number" id="cleaning" value="120" /></div>
+      </div>
+    </div>
+    <div class="nav-btns">
+      <button class="nav-btn" onclick="goTo(0)">← Back</button>
+      <button class="nav-btn primary" onclick="goTo(2)">Next: Revenue →</button>
+    </div>
+  </div>
+
+  <!-- PANEL 2: Revenue -->
+  <div class="panel" id="p2">
+    <div class="card">
+      <div class="card-title" id="rateTitle">Estimated nightly rate</div>
+      <div class="rate-grid" id="rateGrid">
+        <div class="rate-card" id="rc0" onclick="selectRate(0)">
+          <div class="rlabel">Conservative</div>
+          <div class="ramt" id="ra0">$189</div>
+          <div class="rsub">~55% occupancy</div>
+        </div>
+        <div class="rate-card selected" id="rc1" onclick="selectRate(1)">
+          <div class="rlabel">Market rate</div>
+          <div class="ramt" id="ra1">$247</div>
+          <div class="rsub">~68% occupancy</div>
+        </div>
+        <div class="rate-card" id="rc2" onclick="selectRate(2)">
+          <div class="rlabel">Optimistic</div>
+          <div class="ramt" id="ra2">$312</div>
+          <div class="rsub">~78% occupancy</div>
+        </div>
+      </div>
+      <p style="font-size:12px;color:#9ca3af;margin-top:10px;">Estimates based on typical short-term rental markets for your bedroom count. Adjust as needed.</p>
+    </div>
+    <div class="card">
+      <div class="card-title">Or enter your own estimate</div>
+      <div class="form-grid">
+        <div class="form-group"><label>Custom nightly rate ($)</label><input type="number" id="customRate" placeholder="Leave blank to use above" /></div>
+        <div class="form-group"><label>Expected occupancy (%)</label><input type="number" id="occ" value="68" /></div>
+        <div class="form-group"><label>Avg stays per month</label><input type="number" id="stays" value="6" /></div>
+        <div class="form-group"><label>Investment horizon (years)</label><input type="number" id="horizon" value="10" /></div>
+        <div class="form-group"><label>Discount rate / target IRR (%)</label><input type="number" id="discount" value="8" step="0.5" /></div>
+        <div class="form-group"><label>Annual appreciation (%)</label><input type="number" id="appreciation" value="3" step="0.5" /></div>
+      </div>
+    </div>
+    <div class="nav-btns">
+      <button class="nav-btn" onclick="goTo(1)">← Back</button>
+      <button class="nav-btn primary" onclick="calculate()">Calculate →</button>
+    </div>
+  </div>
+
+  <!-- PANEL 3: Verdict -->
+  <div class="panel" id="p3">
+    <div id="verdictBox"></div>
+    <div class="metrics" id="metricsBox"></div>
+    <div class="card" id="sensitivityBox"></div>
+    <div class="card" id="amortBox"></div>
+    <div class="nav-btns">
+      <button class="nav-btn" onclick="goTo(2)">← Back</button>
+      <button class="nav-btn primary" onclick="goTo(0)">Analyze another property</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let selectedRate = 1;
+const rates = [
+  { low: [150,170,189,210,230], mid: [195,220,247,275,305], high: [240,275,312,350,400] }
+];
+const occ = [0.55, 0.68, 0.78];
+
+function goTo(n) {
+  document.querySelectorAll('.panel').forEach((p,i) => p.classList.toggle('active', i===n));
+  document.querySelectorAll('.step').forEach((s,i) => {
+    s.classList.remove('active','done');
+    if(i < n) s.classList.add('done');
+    else if(i === n) s.classList.add('active');
+  });
+  if(n === 2) updateRates();
+}
+
+function updateRates() {
+  const beds = Math.min(5, parseInt(document.getElementById('beds').value)) - 1;
+  const city = document.getElementById('city').value || 'your market';
+  document.getElementById('rateTitle').textContent = `Estimated nightly rate — ${city} · ${beds+1} bed`;
+  const amts = [rates[0].low[beds], rates[0].mid[beds], rates[0].high[beds]];
+  ['ra0','ra1','ra2'].forEach((id,i) => document.getElementById(id).textContent = '$' + amts[i]);
+}
+
+function selectRate(i) {
+  selectedRate = i;
+  document.querySelectorAll('.rate-card').forEach((c,j) => c.classList.toggle('selected', i===j));
+}
+
+function fmt(n) { return n.toLocaleString('en-US', {maximumFractionDigits:0}); }
+function fmtD(n) { return '$' + fmt(Math.round(n)); }
+function fmtP(n) { return (Math.round(n*10)/10).toFixed(1) + '%'; }
+
+function calcMortgage(principal, annualRate, years) {
+  const r = annualRate / 100 / 12;
+  const n = years * 12;
+  if(r === 0) return principal / n;
+  return principal * (r * Math.pow(1+r, n)) / (Math.pow(1+r, n) - 1);
+}
+
+function calcNPV(cashFlows, rate) {
+  return cashFlows.reduce((npv, cf, t) => npv + cf / Math.pow(1 + rate, t + 1), 0);
+}
+
+function calcIRR(cashFlows) {
+  let lo = -0.5, hi = 5.0;
+  for(let i = 0; i < 200; i++) {
+    const mid = (lo + hi) / 2;
+    const npv = cashFlows.reduce((s, cf, t) => s + cf / Math.pow(1+mid, t+1), 0);
+    if(Math.abs(npv) < 1) break;
+    if(npv > 0) lo = mid; else hi = mid;
+  }
+  return (lo + hi) / 2;
+}
+
+function calcExtraPayoff(principal, annualRate, term, extraMonthly) {
+  const r = annualRate / 100 / 12;
+  const base = calcMortgage(principal, annualRate, term);
+  const payment = base + extraMonthly;
+  let bal = principal, months = 0, totalInt = 0, baseInt = 0;
+  // base interest
+  let b2 = principal;
+  for(let m = 0; m < term*12; m++) { baseInt += b2*r; b2 = Math.max(0, b2*(1+r)-base); }
+  while(bal > 0 && months < term*12) {
+    totalInt += bal * r;
+    bal = bal * (1 + r) - payment;
+    months++;
+  }
+  return { months, interestSaved: baseInt - totalInt };
+}
+
+function calculate() {
+  const price = parseFloat(document.getElementById('price').value) || 485000;
+  const down = parseFloat(document.getElementById('down').value) || 97000;
+  const reno = parseFloat(document.getElementById('reno').value) || 0;
+  const propTax = parseFloat(document.getElementById('tax').value) || 6000;
+  const mortRate = parseFloat(document.getElementById('rate').value) || 6.8;
+  const termYrs = parseInt(document.getElementById('term').value) || 30;
+  const extraPayment = parseFloat(document.getElementById('extra').value) || 0;
+  const insurance = parseFloat(document.getElementById('insurance').value) || 2400;
+  const mgmtPct = parseFloat(document.getElementById('mgmt').value) / 100 || 0.20;
+  const cleaningFee = parseFloat(document.getElementById('cleaning').value) || 120;
+  const customRate = parseFloat(document.getElementById('customRate').value);
+  const occPct = parseFloat(document.getElementById('occ').value) / 100 || 0.68;
+  const staysPerMonth = parseFloat(document.getElementById('stays').value) || 6;
+  const horizon = parseInt(document.getElementById('horizon').value) || 10;
+  const discountRate = parseFloat(document.getElementById('discount').value) / 100 || 0.08;
+  const appreciation = parseFloat(document.getElementById('appreciation').value) / 100 || 0.03;
+
+  const beds = Math.min(5, parseInt(document.getElementById('beds').value)) - 1;
+  const rateAmts = [rates[0].low[beds], rates[0].mid[beds], rates[0].high[beds]];
+  const nightlyRate = customRate || rateAmts[selectedRate];
+  const occupancy = customRate ? occPct : occ[selectedRate];
+
+  const principal = price - down;
+  const totalInvested = down + reno;
+  const monthlyMortgage = calcMortgage(principal, mortRate, termYrs);
+
+  // Annual revenue and expenses
+  const daysRented = Math.round(365 * occupancy);
+  const grossRevenue = daysRented * nightlyRate;
+  const cleaningIncome = staysPerMonth * 12 * cleaningFee;
+  const totalRevenue = grossRevenue + cleaningIncome;
+  const mgmtFee = grossRevenue * mgmtPct;
+  const annualMortgage = monthlyMortgage * 12;
+  const utilities = 3600;
+  const supplies = 1800;
+  const totalExpenses = annualMortgage + propTax + insurance + mgmtFee + utilities + supplies;
+  const noi = totalRevenue - propTax - insurance - mgmtFee - utilities - supplies;
+  const annualCashFlow = totalRevenue - totalExpenses;
+  const capRate = noi / price * 100;
+
+  // NPV / IRR
+  const salePrice = price * Math.pow(1+appreciation, horizon);
+  const cashFlows = [];
+  for(let y = 0; y < horizon; y++) {
+    cashFlows.push(annualCashFlow);
+  }
+  cashFlows[horizon-1] += salePrice - (principal * (1 - horizon/termYrs));
+  const npv = -totalInvested + calcNPV(cashFlows, discountRate);
+  const irrFlows = [-totalInvested, ...cashFlows];
+  const irr = calcIRR(irrFlows) * 100;
+
+  // Break-even nightly rate
+  const breakEven = totalExpenses / (daysRented + staysPerMonth * 12);
+
+  // Amortization yr1
+  const r = mortRate / 100 / 12;
+  let yr1Interest = 0, yr1Principal = 0, bal = principal;
+  for(let m = 0; m < 12; m++) {
+    const intPmt = bal * r;
+    const prinPmt = monthlyMortgage - intPmt;
+    yr1Interest += intPmt; yr1Principal += prinPmt; bal -= prinPmt;
+  }
+
+  // Extra payment analysis
+  const extraInfo = extraPayment > 0 ? calcExtraPayoff(principal, mortRate, termYrs, extraPayment) : null;
+
+  // Verdict
+  let vClass = 'green', vTitle = 'Solid deal', vSub = '';
+  if(irr >= 10) { vClass='green'; vTitle='Strong investment'; vSub=`IRR of ${fmtP(irr)} beats most benchmarks. Cash flow looks healthy.`; }
+  else if(irr >= 6) { vClass='green'; vTitle='Solid deal'; vSub=`IRR of ${fmtP(irr)} is competitive. Above typical S&P 500 average.`; }
+  else if(irr >= 3) { vClass='amber'; vTitle='Marginal deal'; vSub=`IRR of ${fmtP(irr)} is below the S&P 500. Consider negotiating price down or improving occupancy.`; }
+  else { vClass='red'; vTitle='Risky investment'; vSub=`IRR of ${fmtP(irr)} is too low. This deal needs renegotiation or significantly higher revenue.`; }
+
+  // Sensitivity rows
+  const sensCases = [
+    { label: `At $${rateAmts[2]}/night (optimistic)`, rate: rateAmts[2], occ: occ[2] },
+    { label: `At $${nightlyRate}/night (selected)`, rate: nightlyRate, occ: occupancy },
+    { label: `At $${rateAmts[0]}/night (conservative)`, rate: rateAmts[0], occ: occ[0] },
+    { label: 'At 50% occupancy', rate: nightlyRate, occ: 0.50 },
+  ];
+
+  function calcQuickIRR(nr, oc) {
+    const gr = Math.round(365*oc)*nr;
+    const cf = gr + staysPerMonth*12*cleaningFee - annualMortgage - propTax - insurance - gr*mgmtPct - utilities - supplies;
+    const flows = [-totalInvested];
+    for(let y=0;y<horizon;y++) flows.push(y===horizon-1 ? cf + salePrice - principal*(1-horizon/termYrs) : cf);
+    return calcIRR(flows)*100;
+  }
+
+  const sensRows = sensCases.map(c => {
+    const si = calcQuickIRR(c.rate, c.occ);
+    const cls = si>=6?'pill-green':si>=3?'pill-amber':'pill-red';
+    const note = si>=10?'beats most asset classes':si>=6?'above S&P average':si>=3?'marginal — below S&P':'cash flow negative';
+    return `<div class="sens-row"><span class="sens-label">${c.label}</span><span class="pill ${cls}">IRR ${fmtP(si)}</span><span class="sens-note">${note}</span></div>`;
+  }).join('');
+
+  const icon = vClass==='green' ? '✓' : vClass==='amber' ? '!' : '✗';
+  document.getElementById('verdictBox').innerHTML = `
+    <div class="verdict ${vClass}">
+      <div class="verdict-icon"><span style="color:#fff;font-size:22px;font-weight:700">${icon}</span></div>
+      <div>
+        <div class="verdict-title">${vTitle}</div>
+        <div class="verdict-sub">${vSub}</div>
+        <div class="tags">
+          <span class="tag ${irr>=6?'tag-green':irr>=3?'tag-amber':'tag-red'}">IRR ${fmtP(irr)}</span>
+          <span class="tag ${npv>0?'tag-green':'tag-red'}">NPV ${npv>0?'+':''}${fmtD(npv)}</span>
+          <span class="tag tag-amber">Cap rate ${fmtP(capRate)}</span>
+          <span class="tag tag-red">Break-even ${fmtD(breakEven)}/night</span>
+        </div>
+      </div>
+    </div>`;
+
+  document.getElementById('metricsBox').innerHTML = `
+    <div class="metric"><div class="ml">Monthly mortgage</div><div class="mv">${fmtD(monthlyMortgage)}</div><div class="ms">${termYrs}-yr fixed</div></div>
+    <div class="metric"><div class="ml">Annual NOI</div><div class="mv">${fmtD(noi)}</div><div class="ms">before mortgage</div></div>
+    <div class="metric"><div class="ml">${horizon}-yr NPV</div><div class="mv">${npv>0?'+':''}${fmtD(npv)}</div><div class="ms">at ${fmtP(discountRate*100)} discount</div></div>
+    <div class="metric"><div class="ml">IRR</div><div class="mv">${fmtP(irr)}</div><div class="ms">annualized</div></div>`;
+
+  document.getElementById('sensitivityBox').innerHTML = `
+    <div class="slabel">Sensitivity — how IRR changes</div>${sensRows}`;
+
+  const prinPct = Math.round(yr1Principal/(yr1Principal+yr1Interest)*100);
+  const extraHtml = extraInfo ? `<div class="extra-tip">Extra ${fmtD(extraPayment)}/mo → saves ${fmtD(extraInfo.interestSaved)} in interest · pays off ${Math.round((termYrs*12-extraInfo.months)/12)} years early</div>` : '';
+
+  document.getElementById('amortBox').innerHTML = `
+    <div class="slabel">Mortgage amortization — year 1</div>
+    <div class="amort-bar">
+      <div class="amort-p" style="width:${prinPct}%"></div>
+      <div class="amort-i" style="width:${100-prinPct}%"></div>
+    </div>
+    <div class="legend">
+      <span><span class="dot" style="background:#5b21b6"></span>Principal ${fmtD(yr1Principal)}</span>
+      <span><span class="dot" style="background:#c4b5fd"></span>Interest ${fmtD(yr1Interest)}</span>
+    </div>${extraHtml}`;
+
+  goTo(3);
+}
+
+function extractListing() {
+  const text = document.getElementById('pasteBox').value.trim();
+  if(!text) { document.getElementById('extractStatus').textContent = 'Paste a listing description first.'; return; }
+  const status = document.getElementById('extractStatus');
+  status.textContent = 'Extracting details...';
+
+  fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 400,
+      messages: [{
+        role: 'user',
+        content: `Extract these fields from the real estate listing below. Return ONLY valid JSON, no other text:\n{"price": number, "bedrooms": number, "city": "string", "annual_tax": number}\n\nListing:\n${text}`
+      }]
+    })
+  })
+  .then(r => r.json())
+  .then(data => {
+    const raw = data.content?.[0]?.text || '';
+    const json = JSON.parse(raw.replace(/```json|```/g,'').trim());
+    if(json.price) document.getElementById('price').value = json.price;
+    if(json.bedrooms) document.getElementById('beds').value = Math.min(5, json.bedrooms);
+    if(json.city) document.getElementById('city').value = json.city;
+    if(json.annual_tax) document.getElementById('tax').value = json.annual_tax;
+    status.textContent = 'Details extracted! Review and adjust below.';
+    status.style.color = '#166534';
+  })
+  .catch(() => {
+    status.textContent = 'Could not extract automatically — please fill in manually.';
+    status.style.color = '#991b1b';
+  });
+}
+</script>
+</body>
+</html>
