@@ -229,6 +229,7 @@
         </div>
         <div class="form-group"><label>Extra monthly payment ($)</label><input type="number" id="extra" value="0" /></div>
         <div class="form-group"><label>Annual insurance ($)</label><input type="number" id="insurance" value="2400" /></div>
+        <div class="form-group"><label>Monthly HOA fee ($)</label><input type="number" id="hoa" value="0" placeholder="0 if none" /></div>
         <div class="form-group"><label>Management fee (%)</label><input type="number" id="mgmt" value="20" step="1" /></div>
         <div class="form-group"><label>Cleaning fee per stay ($)</label><input type="number" id="cleaning" value="120" /></div>
       </div>
@@ -403,36 +404,31 @@ async function analyzeListing() {
   setStatus('listingStatus', 'loading', 'Analyzing listing — extracting property details and market context...');
   document.getElementById('listingInsight').classList.remove('visible');
 
-  const isUrl = input.startsWith('http');
+  // Trim input to first 2000 chars to avoid token limits
+  const trimmed = input.slice(0, 2000);
 
-  const prompt = isUrl
-    ? `A user wants to analyze this real estate listing as a potential Airbnb investment: ${input}
+  const prompt = `You are extracting data from a real estate listing. Read the listing text below carefully and extract the specific numbers and facts that appear in it.
 
-Extract the property details from this listing text and provide STR market context for the city based on your knowledge:
+LISTING TEXT:
+---
+${trimmed}
+---
 
-Return ONLY valid JSON in this exact format, no other text:
+Instructions:
+- Read the listing text above carefully
+- Extract ONLY values that are explicitly stated in the text
+- Do NOT guess or use general knowledge for price, bedrooms, city, or tax — only use what is written above
+- For market_insight, use your knowledge of that city's STR market
+
+Return ONLY valid JSON, no other text, no markdown:
 {
-  "price": number or null,
-  "bedrooms": number or null,
-  "city": "city, state string" or null,
-  "annual_tax": number or null,
-  "market_insight": "2-3 sentence summary of the STR market in this city — mention tourism drivers, seasonality, typical nightly rates you found, and any regulatory notes",
-  "data_sources": "brief note on where you found the market data"
-}`
-    : `A user wants to analyze this real estate listing as a potential Airbnb investment:
-
-${input}
-
-Extract the property details from this listing text and provide STR market context for the city based on your knowledge:
-
-Return ONLY valid JSON in this exact format, no other text:
-{
-  "price": number or null,
-  "bedrooms": number or null,
-  "city": "city, state string" or null,
-  "annual_tax": number or null,
-  "market_insight": "2-3 sentence summary of the STR market in this city — mention tourism drivers, seasonality, typical nightly rates you found, and any regulatory notes",
-  "data_sources": "brief note on where you found the market data"
+  "price": number (the listed sale price in dollars, e.g. 674500),
+  "bedrooms": number (number of bedrooms, e.g. 3),
+  "city": "City, ST" (city and state, e.g. "Nashville, TN"),
+  "annual_tax": number (annual property tax in dollars, e.g. 5250),
+  "hoa_monthly": number (monthly HOA fee if mentioned, e.g. 910, or 0 if none),
+  "market_insight": "2-3 sentences about the STR market in this specific city — tourism drivers, typical nightly rates, seasonality, any STR regulations",
+  "data_sources": "Extracted from listing text + general market knowledge"
 }`;
 
   try {
@@ -449,12 +445,15 @@ Return ONLY valid JSON in this exact format, no other text:
     const json = JSON.parse(jsonMatch[0]);
 
     // Fill form fields
-    const fields = { price: 'price', bedrooms: 'beds', city: 'city', annual_tax: 'tax' };
     let filled = 0;
-    if (json.price)    { document.getElementById('price').value = json.price; document.getElementById('price').classList.add('ai-filled'); filled++; }
-    if (json.bedrooms) { document.getElementById('beds').value = Math.min(5, json.bedrooms); filled++; }
-    if (json.city)     { document.getElementById('city').value = json.city; document.getElementById('city').classList.add('ai-filled'); filled++; }
+    if (json.price)      { document.getElementById('price').value = json.price; document.getElementById('price').classList.add('ai-filled'); filled++; }
+    if (json.bedrooms)   { document.getElementById('beds').value = Math.min(5, json.bedrooms); filled++; }
+    if (json.city)       { document.getElementById('city').value = json.city; document.getElementById('city').classList.add('ai-filled'); filled++; }
     if (json.annual_tax) { document.getElementById('tax').value = json.annual_tax; document.getElementById('tax').classList.add('ai-filled'); filled++; }
+    if (json.hoa_monthly && json.hoa_monthly > 0) {
+      const hoaEl = document.getElementById('hoa');
+      if (hoaEl) { hoaEl.value = json.hoa_monthly; hoaEl.classList.add('ai-filled'); filled++; }
+    }
 
     // Auto-set down payment to 20% if price found
     if (json.price) {
@@ -631,6 +630,7 @@ function calculate() {
   const termYrs  = parseInt(document.getElementById('term').value)         || 30;
   const extraPmt = parseFloat(document.getElementById('extra').value)      || 0;
   const insurance= parseFloat(document.getElementById('insurance').value)  || 2400;
+  const hoaMonthly = parseFloat(document.getElementById('hoa').value) || 0;
   const mgmtPct  = parseFloat(document.getElementById('mgmt').value) / 100 || 0.20;
   const cleanFee = parseFloat(document.getElementById('cleaning').value)   || 120;
   const staysPM  = parseFloat(document.getElementById('stays').value)      || 6;
@@ -657,8 +657,9 @@ function calculate() {
   const annualMtg    = monthlyMtg * 12;
   const utilities    = 3600;
   const supplies     = 1800;
-  const totalExp     = annualMtg + propTax + insurance + mgmtFee + utilities + supplies;
-  const noi          = totalRev - propTax - insurance - mgmtFee - utilities - supplies;
+  const annualHOA    = hoaMonthly * 12;
+  const totalExp     = annualMtg + propTax + insurance + mgmtFee + utilities + supplies + annualHOA;
+  const noi          = totalRev - propTax - insurance - mgmtFee - utilities - supplies - annualHOA;
   const annualCF     = totalRev - totalExp;
   const capRate      = (noi / price) * 100;
   const salePrice    = price * Math.pow(1+apprecn, horizon);
@@ -689,7 +690,7 @@ function calculate() {
   // Sensitivity
   function quickIRR(nr, oc) {
     const gr = Math.round(365*oc)*nr;
-    const cf = gr + staysPM*12*cleanFee - annualMtg - propTax - insurance - gr*mgmtPct - utilities - supplies;
+    const cf = gr + staysPM*12*cleanFee - annualMtg - propTax - insurance - gr*mgmtPct - utilities - supplies - annualHOA;
     const flows = [-totalInvested, ...Array.from({length:horizon}, (_, y) =>
       y===horizon-1 ? cf+salePrice-principal*(1-horizon/termYrs) : cf)];
     return calcIRR(flows)*100;
