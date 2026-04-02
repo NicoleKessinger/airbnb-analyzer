@@ -360,15 +360,19 @@ function reset() {
 }
 
 // ── Claude API call helper ────────────────────────────────────────────────────
-async function callClaude({ messages, system, tools, max_tokens = 1500 }) {
+async function callClaude({ messages, system, max_tokens = 1500 }) {
   if (!apiKey) { alert('Please enter your Anthropic API key first.'); return null; }
   const body = { model: 'claude-sonnet-4-20250514', max_tokens, messages };
   if (system) body.system = system;
-  if (tools)  body.tools  = tools;
 
   const res = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': apiKey,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true'
+    },
     body: JSON.stringify(body),
   });
   if (!res.ok) {
@@ -396,7 +400,7 @@ async function analyzeListing() {
 
   const btn = document.getElementById('analyzeBtn');
   btn.disabled = true;
-  setStatus('listingStatus', 'loading', 'Analyzing listing — searching for property details and market context...');
+  setStatus('listingStatus', 'loading', 'Analyzing listing — extracting property details and market context...');
   document.getElementById('listingInsight').classList.remove('visible');
 
   const isUrl = input.startsWith('http');
@@ -404,10 +408,7 @@ async function analyzeListing() {
   const prompt = isUrl
     ? `A user wants to analyze this real estate listing as a potential Airbnb investment: ${input}
 
-Use web search to:
-1. Find the listing details (price, bedrooms, city/neighborhood, property tax if available)
-2. Search for current Airbnb and VRBO rental rates for similar properties in that specific city/neighborhood
-3. Find typical occupancy rates for short-term rentals in that market
+Extract the property details from this listing text and provide STR market context for the city based on your knowledge:
 
 Return ONLY valid JSON in this exact format, no other text:
 {
@@ -422,7 +423,7 @@ Return ONLY valid JSON in this exact format, no other text:
 
 ${input}
 
-Extract the property details from the text above, then use web search to find current Airbnb/VRBO rates and occupancy data for similar properties in that city.
+Extract the property details from this listing text and provide STR market context for the city based on your knowledge:
 
 Return ONLY valid JSON in this exact format, no other text:
 {
@@ -436,7 +437,6 @@ Return ONLY valid JSON in this exact format, no other text:
 
   try {
     const data = await callClaude({
-      tools: [{ type: 'web_search_20250305', name: 'web_search' }],
       messages: [{ role: 'user', content: prompt }],
       max_tokens: 1200,
     });
@@ -482,7 +482,7 @@ Return ONLY valid JSON in this exact format, no other text:
 
 // ── Step 2: Fetch live market rates ──────────────────────────────────────────
 async function fetchMarketRates(city, beds) {
-  setStatus('rateStatus', 'loading', `Searching for current Airbnb and VRBO rates in ${city}...`);
+  setStatus('rateStatus', 'loading', `Estimating market rates for ${city}...`);
   document.getElementById('rateSource').textContent = 'fetching live data...';
   document.getElementById('rateSource').className = 'rate-source';
   ['rc0','rc1','rc2'].forEach(id => document.getElementById(id).classList.add('loading-card'));
@@ -493,13 +493,7 @@ async function fetchMarketRates(city, beds) {
 
 I need nightly rate estimates for a ${bedsLabel}-bedroom Airbnb/VRBO in this specific market.
 
-Search for:
-- Current Airbnb listings in ${city} with ${bedsLabel} bedrooms and their nightly rates
-- VRBO listings in ${city} with ${bedsLabel} bedrooms and their nightly rates  
-- AirDNA, Rabbu, Mashvisor, or any STR market data for ${city}
-- Typical occupancy rates for short-term rentals in ${city}
-
-Based on what you find, return ONLY valid JSON in this exact format, no other text:
+Based on your knowledge of the short-term rental market in ${city}, return ONLY valid JSON in this exact format, no other text:
 {
   "low_rate": number (conservative nightly rate in $, 25th percentile of market),
   "mid_rate": number (typical market rate in $, median),
@@ -516,7 +510,6 @@ Based on what you find, return ONLY valid JSON in this exact format, no other te
 
   try {
     const data = await callClaude({
-      tools: [{ type: 'web_search_20250305', name: 'web_search' }],
       messages: [{ role: 'user', content: prompt }],
       max_tokens: 1000,
     });
