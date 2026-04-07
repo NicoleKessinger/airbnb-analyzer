@@ -197,14 +197,20 @@
   <!-- ═══ PANEL 0: Property ═══ -->
   <div class="panel active" id="p0">
     <div class="card">
-      <div class="card-title">Paste a listing URL or description</div>
+      <div class="card-title">Paste a listing URL or listing text</div>
       <div class="url-row">
         <input class="url-input" type="text" id="listingUrl"
-          placeholder="Paste a Zillow, Realtor.com, Redfin, or any listing URL — or paste listing text" />
+          placeholder="Paste a Zillow, Realtor.com, or Redfin URL — or paste the listing page text" />
         <button class="url-btn" id="analyzeBtn" onclick="analyzeListing()">
           <span class="ai-badge">AI</span> Analyze listing
         </button>
       </div>
+      <p style="font-size:12px;color:#9ca3af;margin-top:6px;line-height:1.5;">
+        <strong style="color:#6b7280;">Tip:</strong> If the URL doesn't pull all details, open the listing in your browser,
+        press <kbd style="background:#f3f4f6;border:1px solid #e5e7eb;border-radius:3px;padding:1px 5px;font-size:11px;">Ctrl+A</kbd>
+        then <kbd style="background:#f3f4f6;border:1px solid #e5e7eb;border-radius:3px;padding:1px 5px;font-size:11px;">Ctrl+C</kbd>
+        to copy all text, and paste it here instead.
+      </p>
       <div class="status-box" id="listingStatus"></div>
       <div class="insight-box" id="listingInsight">
         <div class="insight-label">AI market context</div>
@@ -415,42 +421,70 @@ function setStatus(id, type, msg) {
 }
 function hideStatus(id) { document.getElementById(id).className = 'status-box'; }
 
-// ── Step 1: Fetch listing page via CORS proxy ────────────────────────────────
+// ── Fetch listing page via CORS proxy ────────────────────────────────────────
 async function fetchListingPage(url) {
-  const proxy = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
-  const res = await fetch(proxy, { signal: AbortSignal.timeout(12000) });
-  if (!res.ok) throw new Error(`Proxy error ${res.status}`);
-  const json = await res.json();
-  const html = json.contents || '';
-  if (!html || html.length < 200) throw new Error('Empty or blocked response');
+  // Try two different proxies in case one is rate-limited
+  const proxies = [
+    { url: `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`, json: true },
+    { url: `https://corsproxy.io/?url=${encodeURIComponent(url)}`, json: false },
+  ];
+  let lastErr;
+  for (const proxy of proxies) {
+    try {
+      const res = await fetch(proxy.url, { signal: AbortSignal.timeout(10000) });
+      if (!res.ok) { lastErr = new Error(`Proxy ${res.status}`); continue; }
+      const html = proxy.json ? (await res.json()).contents || '' : await res.text();
+      if (!html || html.length < 500) { lastErr = new Error('Empty response'); continue; }
 
-  // Extract JSON-LD structured data (real estate sites embed this for SEO)
-  const jsonLdParts = [];
-  const ldRx = /<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi;
-  let m;
-  while ((m = ldRx.exec(html)) !== null) {
-    try { jsonLdParts.push(JSON.stringify(JSON.parse(m[1]))); } catch {}
+      // Extract JSON-LD structured data (Realtor.com/Redfin embed this for SEO)
+      const jsonLdParts = [];
+      const ldRx = /<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi;
+      let m;
+      while ((m = ldRx.exec(html)) !== null) {
+        try { jsonLdParts.push(JSON.stringify(JSON.parse(m[1]))); } catch {}
+      }
+      const plainText = html
+        .replace(/<script[\s\S]*?<\/script>/gi, '')
+        .replace(/<style[\s\S]*?<\/style>/gi, '')
+        .replace(/<[^>]+>/g, ' ')
+        .replace(/&nbsp;/gi, ' ').replace(/&amp;/gi, '&')
+        .replace(/\s{2,}/g, ' ').trim().slice(0, 3500);
+
+      return { structured: jsonLdParts.join('\n').slice(0, 2000), text: plainText };
+    } catch (e) { lastErr = e; }
   }
+  throw lastErr || new Error('All proxies failed');
+}
 
-  // Strip HTML tags to get readable page text
-  const plainText = html
-    .replace(/<script[\s\S]*?<\/script>/gi, '')
-    .replace(/<style[\s\S]*?<\/style>/gi, '')
-    .replace(/<[^>]+>/g, ' ')
-    .replace(/&nbsp;/gi, ' ').replace(/&amp;/gi, '&').replace(/&lt;/gi, '<').replace(/&gt;/gi, '>')
-    .replace(/\s{2,}/g, ' ').trim()
-    .slice(0, 3500);
-
-  return {
-    structured: jsonLdParts.join('\n').slice(0, 2000),
-    text: plainText,
+// ── Claude API call with web search tool ──────────────────────────────────────
+async function callClaudeWithWebSearch({ messages, max_tokens = 2000 }) {
+  const body = {
+    model: 'claude-sonnet-4-20250514',
+    max_tokens,
+    tools: [{ type: 'web_search_20250305', name: 'web_search' }],
+    messages,
   };
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': apiKey,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true',
+    },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error?.message || `API error ${res.status}`);
+  }
+  return res.json();
 }
 
 // ── Step 1: Analyze listing URL / text ───────────────────────────────────────
 async function analyzeListing() {
   const input = document.getElementById('listingUrl').value.trim();
-  if (!input) { setStatus('listingStatus', 'error', 'Paste a listing URL or description first.'); return; }
+  if (!input) { setStatus('listingStatus', 'error', 'Paste a listing URL or listing text first.'); return; }
   if (!apiKey) { setStatus('listingStatus', 'error', 'Add your API key in the banner above first.'); return; }
 
   const btn = document.getElementById('analyzeBtn');
@@ -458,68 +492,76 @@ async function analyzeListing() {
   document.getElementById('listingInsight').classList.remove('visible');
 
   const isUrl = /^https?:\/\//i.test(input);
-  let contentToAnalyze = input;
-  let fetchNote = '';
 
-  if (isUrl) {
-    setStatus('listingStatus', 'loading', 'Fetching listing page...');
-    try {
-      const page = await fetchListingPage(input);
-      const parts = [`URL: ${input}`];
-      if (page.structured) parts.push('=== STRUCTURED DATA (JSON-LD) ===\n' + page.structured);
-      if (page.text)       parts.push('=== PAGE TEXT ===\n' + page.text);
-      contentToAnalyze = parts.join('\n\n');
-      setStatus('listingStatus', 'loading', 'Extracting property details with AI...');
-    } catch (err) {
-      // Page fetch failed — send URL and let Claude extract what it can from the URL pattern
-      contentToAnalyze = `URL: ${input}`;
-      fetchNote = `NOTE: The listing page could not be fetched directly (${err.message}). ` +
-        `Parse the address from the URL path — Realtor.com format: Street_City_ST_ZIP, Zillow format: Street-City-ST-ZIP. ` +
-        `Fill in city/state/bedrooms from the URL if possible. Leave price and tax as null if not determinable.`;
-      setStatus('listingStatus', 'loading', 'Analyzing listing URL with AI...');
-    }
-  } else {
-    setStatus('listingStatus', 'loading', 'Extracting property details from listing text...');
-  }
-
-  const trimmed = contentToAnalyze.slice(0, 5000);
-
-  const prompt = `You are extracting data from a real estate listing.${fetchNote ? '\n' + fetchNote : ''}
-
-LISTING CONTENT:
----
-${trimmed}
----
-
-Instructions:
-- Extract values explicitly stated in the content; for URL-only input, parse address components from the URL path
-- Do NOT invent price, bedrooms, or tax — return null if not present
-- For market_insight, use your knowledge of short-term rental demand in that city
-
-Return ONLY valid JSON, no other text, no markdown:
+  const jsonSchema = `Return ONLY valid JSON, no other text, no markdown:
 {
   "price": number or null,
   "bedrooms": number or null,
   "city": "City, ST" or null,
   "annual_tax": number or null,
   "hoa_monthly": number or 0,
-  "market_insight": "2-3 sentences about the STR market in this city — tourism, typical nightly rates, seasonality, regulations",
+  "market_insight": "2-3 sentences about the STR market in this city — tourism, nightly rates, seasonality, STR regulations",
   "data_sources": "brief description of how data was obtained"
 }`;
 
-  try {
-    const data = await callClaude({
-      messages: [{ role: 'user', content: prompt }],
-      max_tokens: 1200,
-    });
+  let apiResponse;
 
-    const textBlock = data.content?.find(b => b.type === 'text');
+  try {
+    if (!isUrl) {
+      // ── Plain text: extract directly ─────────────────────────────────────
+      setStatus('listingStatus', 'loading', 'Extracting property details from listing text...');
+      apiResponse = await callClaude({
+        messages: [{ role: 'user', content:
+          `Extract real estate listing data from the text below. Only use values explicitly stated in the text.\n\nLISTING TEXT:\n---\n${input.slice(0, 4500)}\n---\n\n${jsonSchema}` }],
+        max_tokens: 1200,
+      });
+
+    } else {
+      // ── URL: strategy 1 — CORS proxy ─────────────────────────────────────
+      setStatus('listingStatus', 'loading', 'Fetching listing page...');
+      let proxyContent = null;
+      try {
+        const page = await fetchListingPage(input);
+        if (page.structured.length > 50 || page.text.length > 200) {
+          const parts = [`URL: ${input}`];
+          if (page.structured) parts.push('=== STRUCTURED DATA (JSON-LD) ===\n' + page.structured);
+          if (page.text)       parts.push('=== PAGE TEXT ===\n' + page.text);
+          proxyContent = parts.join('\n\n');
+        }
+      } catch {}
+
+      if (proxyContent) {
+        setStatus('listingStatus', 'loading', 'Extracting property details with AI...');
+        apiResponse = await callClaude({
+          messages: [{ role: 'user', content:
+            `Extract real estate listing data. Only use values present in the content.\n\n${proxyContent.slice(0, 5000)}\n\n${jsonSchema}` }],
+          max_tokens: 1200,
+        });
+
+      } else {
+        // ── URL: strategy 2 — web search ─────────────────────────────────
+        setStatus('listingStatus', 'loading', 'Looking up listing via web search...');
+        apiResponse = await callClaudeWithWebSearch({
+          messages: [{ role: 'user', content:
+            `Look up this real estate listing and find the current list price, number of bedrooms, annual property tax, and monthly HOA fee.\n\n${input}\n\n${jsonSchema}` }],
+          max_tokens: 1500,
+        });
+      }
+    }
+  } catch (err) {
+    setStatus('listingStatus', 'error', `Could not analyze listing: ${err.message}. Try pasting the listing text directly (open listing → Ctrl+A → Ctrl+C → paste here).`);
+    btn.disabled = false;
+    return;
+  }
+
+  // ── Parse response and fill form ─────────────────────────────────────────
+  try {
+    const textBlock = apiResponse.content?.find(b => b.type === 'text');
     const raw = textBlock?.text || '';
     const jsonMatch = raw.match(/\{[\s\S]*\}/);
     if (!jsonMatch) throw new Error('Could not parse response');
     const json = JSON.parse(jsonMatch[0]);
 
-    // Fill form fields
     let filled = 0;
     if (json.price)      { document.getElementById('price').value = json.price; document.getElementById('price').classList.add('ai-filled'); filled++; }
     if (json.bedrooms)   { document.getElementById('beds').value = Math.min(5, json.bedrooms); filled++; }
@@ -529,19 +571,19 @@ Return ONLY valid JSON, no other text, no markdown:
       const hoaEl = document.getElementById('hoa');
       if (hoaEl) { hoaEl.value = json.hoa_monthly; hoaEl.classList.add('ai-filled'); filled++; }
     }
-
-    // Auto-set down payment to 20% if price found
     if (json.price) {
       const dp = Math.round(json.price * 0.20 / 1000) * 1000;
       document.getElementById('down').value = dp;
       document.getElementById('down').classList.add('ai-filled');
     }
 
-    const fetchedNote = isUrl && !fetchNote ? ' (fetched from listing page)' : '';
+    const partialHint = (filled <= 1 && isUrl)
+      ? ` For complete details, open the listing in your browser, press Ctrl+A then Ctrl+C, and paste the text here.`
+      : '';
     setStatus('listingStatus', filled > 0 ? 'success' : 'error',
       filled > 0
-        ? `✓ Found ${filled} property details${fetchedNote}. Fields highlighted in purple were auto-filled — review and adjust as needed.`
-        : `No property details could be extracted. Try pasting the full listing text directly instead of the URL.`);
+        ? `✓ Found ${filled} property details. Fields in purple were auto-filled — review and adjust.${partialHint}`
+        : `No details found. Open the listing page, press Ctrl+A then Ctrl+C, and paste the text here.`);
 
     if (json.market_insight) {
       document.getElementById('insightText').textContent = json.market_insight +
@@ -550,7 +592,7 @@ Return ONLY valid JSON, no other text, no markdown:
     }
 
   } catch (err) {
-    setStatus('listingStatus', 'error', `Could not analyze listing: ${err.message}. Try pasting the listing text directly.`);
+    setStatus('listingStatus', 'error', `Could not parse response: ${err.message}. Try pasting the listing text directly.`);
   }
 
   btn.disabled = false;
