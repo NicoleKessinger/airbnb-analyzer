@@ -415,6 +415,38 @@ function setStatus(id, type, msg) {
 }
 function hideStatus(id) { document.getElementById(id).className = 'status-box'; }
 
+// ── Step 1: Fetch listing page via CORS proxy ────────────────────────────────
+async function fetchListingPage(url) {
+  const proxy = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
+  const res = await fetch(proxy, { signal: AbortSignal.timeout(12000) });
+  if (!res.ok) throw new Error(`Proxy error ${res.status}`);
+  const json = await res.json();
+  const html = json.contents || '';
+  if (!html || html.length < 200) throw new Error('Empty or blocked response');
+
+  // Extract JSON-LD structured data (real estate sites embed this for SEO)
+  const jsonLdParts = [];
+  const ldRx = /<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi;
+  let m;
+  while ((m = ldRx.exec(html)) !== null) {
+    try { jsonLdParts.push(JSON.stringify(JSON.parse(m[1]))); } catch {}
+  }
+
+  // Strip HTML tags to get readable page text
+  const plainText = html
+    .replace(/<script[\s\S]*?<\/script>/gi, '')
+    .replace(/<style[\s\S]*?<\/style>/gi, '')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/&nbsp;/gi, ' ').replace(/&amp;/gi, '&').replace(/&lt;/gi, '<').replace(/&gt;/gi, '>')
+    .replace(/\s{2,}/g, ' ').trim()
+    .slice(0, 3500);
+
+  return {
+    structured: jsonLdParts.join('\n').slice(0, 2000),
+    text: plainText,
+  };
+}
+
 // ── Step 1: Analyze listing URL / text ───────────────────────────────────────
 async function analyzeListing() {
   const input = document.getElementById('listingUrl').value.trim();
@@ -423,34 +455,56 @@ async function analyzeListing() {
 
   const btn = document.getElementById('analyzeBtn');
   btn.disabled = true;
-  setStatus('listingStatus', 'loading', 'Analyzing listing — extracting property details and market context...');
   document.getElementById('listingInsight').classList.remove('visible');
 
-  // Trim input to first 2000 chars to avoid token limits
-  const trimmed = input.slice(0, 2000);
+  const isUrl = /^https?:\/\//i.test(input);
+  let contentToAnalyze = input;
+  let fetchNote = '';
 
-  const prompt = `You are extracting data from a real estate listing. Read the listing text below carefully and extract the specific numbers and facts that appear in it.
+  if (isUrl) {
+    setStatus('listingStatus', 'loading', 'Fetching listing page...');
+    try {
+      const page = await fetchListingPage(input);
+      const parts = [`URL: ${input}`];
+      if (page.structured) parts.push('=== STRUCTURED DATA (JSON-LD) ===\n' + page.structured);
+      if (page.text)       parts.push('=== PAGE TEXT ===\n' + page.text);
+      contentToAnalyze = parts.join('\n\n');
+      setStatus('listingStatus', 'loading', 'Extracting property details with AI...');
+    } catch (err) {
+      // Page fetch failed — send URL and let Claude extract what it can from the URL pattern
+      contentToAnalyze = `URL: ${input}`;
+      fetchNote = `NOTE: The listing page could not be fetched directly (${err.message}). ` +
+        `Parse the address from the URL path — Realtor.com format: Street_City_ST_ZIP, Zillow format: Street-City-ST-ZIP. ` +
+        `Fill in city/state/bedrooms from the URL if possible. Leave price and tax as null if not determinable.`;
+      setStatus('listingStatus', 'loading', 'Analyzing listing URL with AI...');
+    }
+  } else {
+    setStatus('listingStatus', 'loading', 'Extracting property details from listing text...');
+  }
 
-LISTING TEXT:
+  const trimmed = contentToAnalyze.slice(0, 5000);
+
+  const prompt = `You are extracting data from a real estate listing.${fetchNote ? '\n' + fetchNote : ''}
+
+LISTING CONTENT:
 ---
 ${trimmed}
 ---
 
 Instructions:
-- Read the listing text above carefully
-- Extract ONLY values that are explicitly stated in the text
-- Do NOT guess or use general knowledge for price, bedrooms, city, or tax — only use what is written above
-- For market_insight, use your knowledge of that city's STR market
+- Extract values explicitly stated in the content; for URL-only input, parse address components from the URL path
+- Do NOT invent price, bedrooms, or tax — return null if not present
+- For market_insight, use your knowledge of short-term rental demand in that city
 
 Return ONLY valid JSON, no other text, no markdown:
 {
-  "price": number (the listed sale price in dollars, e.g. 674500),
-  "bedrooms": number (number of bedrooms, e.g. 3),
-  "city": "City, ST" (city and state, e.g. "Nashville, TN"),
-  "annual_tax": number (annual property tax in dollars, e.g. 5250),
-  "hoa_monthly": number (monthly HOA fee if mentioned, e.g. 910, or 0 if none),
-  "market_insight": "2-3 sentences about the STR market in this specific city — tourism drivers, typical nightly rates, seasonality, any STR regulations",
-  "data_sources": "Extracted from listing text + general market knowledge"
+  "price": number or null,
+  "bedrooms": number or null,
+  "city": "City, ST" or null,
+  "annual_tax": number or null,
+  "hoa_monthly": number or 0,
+  "market_insight": "2-3 sentences about the STR market in this city — tourism, typical nightly rates, seasonality, regulations",
+  "data_sources": "brief description of how data was obtained"
 }`;
 
   try {
@@ -459,7 +513,6 @@ Return ONLY valid JSON, no other text, no markdown:
       max_tokens: 1200,
     });
 
-    // Find the text block with our JSON
     const textBlock = data.content?.find(b => b.type === 'text');
     const raw = textBlock?.text || '';
     const jsonMatch = raw.match(/\{[\s\S]*\}/);
@@ -484,10 +537,12 @@ Return ONLY valid JSON, no other text, no markdown:
       document.getElementById('down').classList.add('ai-filled');
     }
 
-    setStatus('listingStatus', 'success',
-      `✓ Found ${filled} property details. Fields highlighted in purple were auto-filled — review and adjust as needed.`);
+    const fetchedNote = isUrl && !fetchNote ? ' (fetched from listing page)' : '';
+    setStatus('listingStatus', filled > 0 ? 'success' : 'error',
+      filled > 0
+        ? `✓ Found ${filled} property details${fetchedNote}. Fields highlighted in purple were auto-filled — review and adjust as needed.`
+        : `No property details could be extracted. Try pasting the full listing text directly instead of the URL.`);
 
-    // Show market insight
     if (json.market_insight) {
       document.getElementById('insightText').textContent = json.market_insight +
         (json.data_sources ? ` (Sources: ${json.data_sources})` : '');
@@ -495,7 +550,7 @@ Return ONLY valid JSON, no other text, no markdown:
     }
 
   } catch (err) {
-    setStatus('listingStatus', 'error', `Could not analyze listing: ${err.message}. Try pasting the listing text directly instead of a URL.`);
+    setStatus('listingStatus', 'error', `Could not analyze listing: ${err.message}. Try pasting the listing text directly.`);
   }
 
   btn.disabled = false;
