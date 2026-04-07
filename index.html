@@ -163,6 +163,22 @@
   .cf-be { margin-top: 10px; padding: 10px 14px; background: #f9fafb; border-radius: 8px; border-left: 3px solid #c4b5fd; font-size: 13px; color: #4b5563; line-height: 1.7; }
   .cf-be strong { color: #1c1c1c; }
 
+  /* Investment analysis section */
+  .invest-summary { padding: 14px 16px; border-radius: 10px; font-size: 13px; line-height: 1.75; margin-bottom: 1rem; }
+  .invest-summary.green { background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; }
+  .invest-summary.amber { background: #fffbeb; border: 1px solid #fde68a; color: #92400e; }
+  .invest-summary.red   { background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; }
+  .invest-summary strong { color: inherit; }
+  .invest-summary-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; opacity: 0.7; margin-bottom: 6px; }
+  .payback-bar { height: 10px; border-radius: 99px; background: #f3f4f6; overflow: hidden; margin: 10px 0 5px; }
+  .payback-fill { height: 100%; border-radius: 99px; }
+  .invest-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-bottom: 1rem; }
+  .metric .mx { font-size: 11px; margin-top: 6px; padding-top: 6px; border-top: 1px solid #f0f0f0; line-height: 1.4; }
+  .assum-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px 16px; margin-bottom: 10px; }
+  .assum-item .av { font-size: 14px; font-weight: 700; color: #1c1c1c; }
+  .assum-item .al { font-size: 11px; color: #9ca3af; margin-top: 1px; }
+  @media (max-width: 540px) { .invest-grid { grid-template-columns: repeat(2,1fr); } .assum-grid { grid-template-columns: repeat(2,1fr); } }
+
   .panel { display: none; }
   .panel.active { display: block; }
   .slabel { font-size: 14px; font-weight: 600; color: #374151; margin-bottom: 10px; }
@@ -865,6 +881,45 @@ function calculate() {
   const maintenanceRow  = maintenance > 0
     ? `<div class="cf-row"><span class="cfl">Maintenance fees (pool, lawn, etc.)</span><span class="cfv">−${fmtD(maintenance)}</span></div>` : '';
 
+  // ── Additional investment metrics ──────────────────────────────────────────
+  const cashOnCash   = (annualCF / totalInvested) * 100;
+  const dscr         = noi / annualMtg;
+  const simplePayback= annualCF > 0 ? totalInvested / annualCF : null;
+  const paybackOk    = simplePayback !== null && simplePayback <= horizon;
+  const paybackPct   = simplePayback ? Math.min(100, (simplePayback / horizon) * 100) : 0;
+  const spDiff       = irr - discount * 100;
+  const spDiffAbs    = Math.abs(spDiff).toFixed(1);
+
+  // Per-metric colors
+  const irrClr = irr >= discount*100 ? '#16a34a' : irr >= discount*100*0.75 ? '#d97706' : '#dc2626';
+  const npvClr = npv >= 0 ? '#16a34a' : '#dc2626';
+  const cocClr = cashOnCash >= 8 ? '#16a34a' : cashOnCash >= 4 ? '#d97706' : '#dc2626';
+  const dscrClr= dscr >= 1.25 ? '#166534' : dscr >= 1.0 ? '#92400e' : '#991b1b';
+  const dscrNote=dscr >= 1.25 ? '✓ Strong — preferred by lenders' : dscr >= 1.0 ? '~ Marginal — just covers debt' : '✗ Rent doesn\'t cover the mortgage';
+  const pbClr  = paybackOk ? (simplePayback <= horizon * 0.7 ? '#16a34a' : '#d97706') : '#dc2626';
+
+  // Plain-English summary
+  const incomeStr = moNetCF >= 0
+    ? `generating <strong>${fmtD(moNetCF)}/month</strong> in net income`
+    : `running at a <strong>${fmtD(Math.abs(moNetCF))}/month</strong> net loss`;
+  let summaryText;
+  if (vClass === 'green') {
+    summaryText = `This is a <strong>strong investment</strong>. You're putting ${fmtD(totalInvested)} down and ${incomeStr}. ` +
+      `The projected <strong>${fmtP(irr)}/yr annual return (IRR)</strong> beats the ${fmtP(discount*100)} stock market benchmark by ${spDiffAbs}pp. ` +
+      (paybackOk
+        ? `Your full investment recovers in <strong>${simplePayback.toFixed(1)} years</strong> from rental income alone — before factoring in appreciation.`
+        : `Down payment recovery from cash flow alone exceeds ${horizon} years, but property appreciation at exit drives the strong overall return.`);
+  } else if (vClass === 'amber') {
+    summaryText = `This deal is <strong>borderline</strong>. You're putting ${fmtD(totalInvested)} down and ${incomeStr}. ` +
+      `The <strong>${fmtP(irr)}/yr return</strong> ${spDiff >= 0 ? 'slightly beats' : 'trails'} the ${fmtP(discount*100)} stock market by ${spDiffAbs}pp. ` +
+      `Consider negotiating the purchase price lower or increasing nightly rates to push this into strong-deal territory.`;
+  } else {
+    summaryText = `<strong>The numbers are challenging.</strong> The <strong>${fmtP(irr)}/yr return</strong> trails the ` +
+      `${fmtP(discount*100)} stock market benchmark by ${spDiffAbs}pp. ` +
+      (moNetCF < 0 ? `This property runs at a <strong>${fmtD(Math.abs(moNetCF))}/month</strong> net loss at current projections. ` : '') +
+      `To improve this deal: negotiate a lower purchase price, target higher nightly rates, or find a higher-demand market.`;
+  }
+
   document.getElementById('verdictBox').innerHTML = `
     <div class="verdict ${vClass}">
       <div class="verdict-icon"><span style="color:#fff;font-size:22px;font-weight:700">${icon}</span></div>
@@ -935,30 +990,97 @@ function calculate() {
   // ── Section 2: Investment Analysis ───────────────────────────────────────────
   document.getElementById('sensitivityBox').innerHTML = `
     <div class="section-title">Investment Analysis</div>
-    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:1rem">
+
+    <div class="invest-summary ${vClass}">
+      <div class="invest-summary-label">Plain-English Summary</div>
+      ${summaryText}
+    </div>
+
+    <div class="card" style="margin-bottom:1rem">
+      <div class="slabel">Down Payment Recovery</div>
+      <div style="font-size:13px;color:#6b7280;margin-bottom:10px">
+        How long before rental cash flow returns your full
+        <strong style="color:#374151">${fmtD(totalInvested)}</strong> investment
+        (down payment${reno > 0 ? ' + renovation' : ''})
+      </div>
+      <div class="payback-bar">
+        <div class="payback-fill" style="width:${paybackPct.toFixed(1)}%;background:${paybackOk ? '#5b21b6' : '#e5e7eb'}"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:10px">
+        <span style="color:#9ca3af">Year 0 · $0 recovered</span>
+        <span style="color:${pbClr};font-weight:600">
+          ${paybackOk ? `✓ Fully recovered at year ${simplePayback.toFixed(1)}` : annualCF > 0 ? `✗ ${simplePayback.toFixed(1)} yrs — exceeds ${horizon}-yr horizon` : '✗ Negative cash flow'}
+        </span>
+        <span style="color:#9ca3af">Year ${horizon}</span>
+      </div>
+      <div style="font-size:12px;color:#9ca3af;border-top:1px solid #f3f4f6;padding-top:8px;line-height:1.6">
+        ${paybackOk
+          ? `At <strong style="color:#374151">${fmtD(Math.abs(moNetCF))}/mo</strong> net cash flow, the full ${fmtD(totalInvested)} investment is recovered in <strong style="color:#374151">${simplePayback.toFixed(1)} years</strong> from rental income alone. This excludes appreciation — IRR and NPV below capture the complete picture including the eventual property sale.`
+          : annualCF > 0
+            ? `Cash flow is positive but the ${fmtD(totalInvested)} investment would take ${simplePayback.toFixed(1)} years to fully recover — beyond the ${horizon}-year horizon. The IRR still accounts for the exit sale proceeds.`
+            : `Cash flow is currently negative. Investment return comes entirely from property appreciation at exit, which is captured in the IRR.`
+        }
+      </div>
+    </div>
+
+    <div class="invest-grid">
       <div class="metric">
         <div class="ml">IRR</div>
-        <div class="mv">${fmtP(irr)}</div>
-        <div class="ms">annualized return</div>
+        <div class="mv" style="color:${irrClr}">${fmtP(irr)}</div>
+        <div class="ms">Your annual return on investment — like a savings account rate, but for this property</div>
+        <div class="mx" style="color:${irrClr}">${spDiff >= 0 ? `✓ Beats ${fmtP(discount*100)} hurdle by ${spDiffAbs}pp` : `✗ Trails ${fmtP(discount*100)} hurdle by ${spDiffAbs}pp`}</div>
       </div>
       <div class="metric">
-        <div class="ml">${horizon}-yr NPV</div>
-        <div class="mv" style="font-size:17px">${npv>=0?'+':''}${fmtD(npv)}</div>
-        <div class="ms">at ${fmtP(discount*100)} discount rate</div>
+        <div class="ml">NPV · ${horizon}-yr</div>
+        <div class="mv" style="font-size:17px;color:${npvClr}">${npv>=0?'+':''}${fmtD(npv)}</div>
+        <div class="ms">${npv>=0?'Extra wealth this creates vs. investing in the stock market':'Wealth lost vs. investing in the stock market'}</div>
+        <div class="mx" style="color:${npvClr}">${npv>=0?`✓ Outperforms ${fmtP(discount*100)} alternative`:`✗ Underperforms ${fmtP(discount*100)} alternative`}</div>
       </div>
       <div class="metric">
         <div class="ml">Cap rate</div>
         <div class="mv">${fmtP(capRate)}</div>
-        <div class="ms">NOI ÷ purchase price</div>
+        <div class="ms">Annual yield if you paid all cash — no mortgage</div>
+        <div class="mx">${capRate>=6?'✓ Above 6% STR benchmark':capRate>=4?'~ Typical 4–6% STR range':'✗ Below 4% — low yield'}</div>
       </div>
       <div class="metric">
-        <div class="ml">Break-even occ.</div>
-        <div class="mv">${beOcc.toFixed(1)}%</div>
-        <div class="ms">min to cover all costs</div>
+        <div class="ml">Cash-on-cash</div>
+        <div class="mv" style="color:${cocClr}">${fmtP(cashOnCash)}</div>
+        <div class="ms">Annual cash return on your actual dollars invested this year</div>
+        <div class="mx" style="color:${cocClr}">${cashOnCash>=8?'✓ Strong cash yield':cashOnCash>=4?'~ Moderate cash yield':cashOnCash>=0?'~ Low — minimal cash return':'✗ Negative cash flow'}</div>
+      </div>
+      <div class="metric">
+        <div class="ml">DSCR</div>
+        <div class="mv" style="color:${dscrClr}">${dscr.toFixed(2)}x</div>
+        <div class="ms">Rental income ÷ mortgage — does rent cover the debt?</div>
+        <div class="mx" style="color:${dscrClr}">${dscrNote}</div>
+      </div>
+      <div class="metric">
+        <div class="ml">Simple payback</div>
+        <div class="mv" style="color:${pbClr}">${simplePayback ? simplePayback.toFixed(1)+' yrs' : 'N/A'}</div>
+        <div class="ms">Years to recover full investment from cash flow alone</div>
+        <div class="mx" style="color:${pbClr}">${paybackOk?`✓ Within ${horizon}-yr horizon`:`✗ Exceeds ${horizon}-yr horizon`}</div>
       </div>
     </div>
+
+    <div class="card" style="margin-bottom:1rem">
+      <div class="slabel">Assumptions used in these calculations</div>
+      <div class="assum-grid">
+        <div class="assum-item"><div class="av">${horizon} years</div><div class="al">Investment horizon (sold at exit)</div></div>
+        <div class="assum-item"><div class="av">${fmtP(discount*100)}</div><div class="al">Discount / hurdle rate</div></div>
+        <div class="assum-item"><div class="av">${fmtP(apprecn*100)}/yr</div><div class="al">Annual property appreciation</div></div>
+        <div class="assum-item"><div class="av">${Math.round(occupancy*100)}%</div><div class="al">Projected occupancy rate</div></div>
+        <div class="assum-item"><div class="av">${fmtD(nightlyRate)}/night</div><div class="al">Average nightly rate</div></div>
+        <div class="assum-item"><div class="av">${fmtD(price)}</div><div class="al">Purchase price</div></div>
+      </div>
+      <div style="font-size:12px;color:#9ca3af;padding-top:8px;border-top:1px solid #f3f4f6;line-height:1.6">
+        <strong style="color:#6b7280">IRR</strong> models the total annualized return including rental income and the property sale at year ${horizon}.
+        <strong style="color:#6b7280">NPV</strong> asks: compared to earning ${fmtP(discount*100)}/yr in an alternative investment (e.g. index fund), how much extra wealth does this property create?
+        A positive NPV means this property wins. Adjust the horizon, appreciation, and discount rate in Step 3 → Market Rates.
+      </div>
+    </div>
+
     <div class="card">
-      <div class="slabel">How IRR changes under different scenarios</div>
+      <div class="slabel">Scenario sensitivity — IRR under different market conditions</div>
       ${sensRows}
     </div>`;
 
