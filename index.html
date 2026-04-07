@@ -258,6 +258,7 @@
         <div class="form-group"><label>Extra monthly payment ($)</label><input type="number" id="extra" value="0" /></div>
         <div class="form-group"><label>Annual insurance ($)</label><input type="number" id="insurance" value="2400" /></div>
         <div class="form-group"><label>Monthly HOA fee ($)</label><input type="number" id="hoa" value="0" placeholder="0 if none" /></div>
+        <div class="form-group"><label>Monthly maintenance fees ($)</label><input type="number" id="maintenance" value="0" placeholder="pool, lawn, etc." /></div>
         <div class="form-group"><label>Management fee (%)</label><input type="number" id="mgmt" value="20" step="1" /></div>
         <div class="form-group"><label>Cleaning fee per stay ($)</label><input type="number" id="cleaning" value="120" /></div>
       </div>
@@ -749,7 +750,8 @@ function calculate() {
   const termYrs  = parseInt(document.getElementById('term').value)         || 30;
   const extraPmt = parseFloat(document.getElementById('extra').value)      || 0;
   const insurance= parseFloat(document.getElementById('insurance').value)  || 2400;
-  const hoaMonthly = parseFloat(document.getElementById('hoa').value) || 0;
+  const hoaMonthly  = parseFloat(document.getElementById('hoa').value) || 0;
+  const maintenance = parseFloat(document.getElementById('maintenance').value) || 0;
   const mgmtPct  = parseFloat(document.getElementById('mgmt').value) / 100 || 0.20;
   const cleanFee = parseFloat(document.getElementById('cleaning').value)   || 120;
   const staysPM  = parseFloat(document.getElementById('stays').value)      || 6;
@@ -774,11 +776,12 @@ function calculate() {
   const totalRev     = grossRev + cleaningRev;
   const mgmtFee      = grossRev * mgmtPct;
   const annualMtg    = monthlyMtg * 12;
-  const utilities    = 3600;
-  const supplies     = 1800;
-  const annualHOA    = hoaMonthly * 12;
-  const totalExp     = annualMtg + propTax + insurance + mgmtFee + utilities + supplies + annualHOA;
-  const noi          = totalRev - propTax - insurance - mgmtFee - utilities - supplies - annualHOA;
+  const utilities        = 3600;
+  const supplies         = 1800;
+  const annualHOA        = hoaMonthly * 12;
+  const annualMaintenance= maintenance * 12;
+  const totalExp     = annualMtg + propTax + insurance + mgmtFee + utilities + supplies + annualHOA + annualMaintenance;
+  const noi          = totalRev - propTax - insurance - mgmtFee - utilities - supplies - annualHOA - annualMaintenance;
   const annualCF     = totalRev - totalExp;
   const capRate      = (noi / price) * 100;
   const salePrice    = price * Math.pow(1+apprecn, horizon);
@@ -809,7 +812,7 @@ function calculate() {
   // Sensitivity
   function quickIRR(nr, oc) {
     const gr = Math.round(365*oc)*nr;
-    const cf = gr + staysPM*12*cleanFee - annualMtg - propTax - insurance - gr*mgmtPct - utilities - supplies - annualHOA;
+    const cf = gr + staysPM*12*cleanFee - annualMtg - propTax - insurance - gr*mgmtPct - utilities - supplies - annualHOA - annualMaintenance;
     const flows = [-totalInvested, ...Array.from({length:horizon}, (_, y) =>
       y===horizon-1 ? cf+salePrice-principal*(1-horizon/termYrs) : cf)];
     return calcIRR(flows)*100;
@@ -845,7 +848,7 @@ function calculate() {
   const netCls          = moNetCF >= 0 ? 'pos' : 'neg';
 
   // Break-even occupancy (accounting for mgmt fee scaling with revenue)
-  const fixedExpAnnual  = annualMtg + propTax + insurance + 3600 + 1800 + annualHOA;
+  const fixedExpAnnual  = annualMtg + propTax + insurance + 3600 + 1800 + annualHOA + annualMaintenance;
   const beOcc           = Math.min(100, Math.max(0,
     (fixedExpAnnual - cleaningRev) / (365 * nightlyRate * (1 - mgmtPct)) * 100));
   const occPct          = Math.round(occupancy * 100);
@@ -859,6 +862,8 @@ function calculate() {
     : `Cash flow is negative — down payment is not recovering.`;
   const hoaRow          = hoaMonthly > 0
     ? `<div class="cf-row"><span class="cfl">HOA fee</span><span class="cfv">−${fmtD(hoaMonthly)}</span></div>` : '';
+  const maintenanceRow  = maintenance > 0
+    ? `<div class="cf-row"><span class="cfl">Maintenance fees (pool, lawn, etc.)</span><span class="cfv">−${fmtD(maintenance)}</span></div>` : '';
 
   document.getElementById('verdictBox').innerHTML = `
     <div class="verdict ${vClass}">
@@ -905,6 +910,7 @@ function calculate() {
         <span class="cfv">−${fmtD(moInsurance)}</span>
       </div>
       ${hoaRow}
+      ${maintenanceRow}
       <div class="cf-row">
         <span class="cfl">Management fee (${Math.round(mgmtPct*100)}% of rental revenue)</span>
         <span class="cfv">−${fmtD(moMgmt)}</span>
