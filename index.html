@@ -7,9 +7,23 @@
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f4; color: #1c1c1c; font-size: 15px; }
-  .app { max-width: 800px; margin: 0 auto; padding: 2rem 1rem 4rem; }
-  h1 { font-size: 24px; font-weight: 600; margin-bottom: 4px; }
-  .subtitle { color: #6b7280; font-size: 14px; margin-bottom: 1.5rem; }
+  .app { max-width: 800px; margin: 0 auto; padding: 2rem 1rem 3rem; }
+  h1 { font-size: 26px; font-weight: 700; line-height: 1.3; margin-bottom: 6px; }
+  .subtitle { color: #6b7280; font-size: 15px; margin-bottom: 1.75rem; }
+
+  /* NEW: Input guidance */
+  .input-guide { font-size: 13px; color: #374151; margin-bottom: 4px; font-weight: 500; }
+  .input-example { font-size: 12px; color: #9ca3af; margin-bottom: 10px; font-family: monospace; }
+
+  /* NEW: Results heading */
+  .results-heading { font-size: 18px; font-weight: 600; color: #1c1c1c; margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 2px solid #ede9fe; }
+
+  /* NEW: Disclaimer footer */
+  .disclaimer { max-width: 800px; margin: 0 auto; padding: 1.25rem 1rem 2rem; border-top: 1px solid #e5e7eb; }
+  .disclaimer-title { font-size: 12px; font-weight: 600; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; }
+  .disclaimer-list { list-style: none; display: flex; flex-wrap: wrap; gap: 4px 0; flex-direction: column; }
+  .disclaimer-list li { font-size: 12px; color: #9ca3af; padding-left: 14px; position: relative; line-height: 1.6; }
+  .disclaimer-list li::before { content: '·'; position: absolute; left: 0; }
 
   /* API key banner */
   .api-banner { background: #fef3c7; border: 1px solid #fde68a; border-radius: 10px; padding: 12px 16px; margin-bottom: 1.25rem; display: flex; align-items: center; gap: 10px; }
@@ -192,8 +206,8 @@
 </head>
 <body>
 <div class="app">
-  <h1>Should I Buy This Airbnb?</h1>
-  <p class="subtitle">Short-term rental investment analyzer · MBA 6223 Finance</p>
+  <h1>Analyze Any Zillow Property for Airbnb Investment Potential</h1>
+  <p class="subtitle">Estimate revenue, occupancy, and ROI in seconds before you buy · MBA 6223 Finance</p>
 
   <!-- API Key Banner -->
   <div class="api-banner" id="apiBanner">
@@ -214,6 +228,9 @@
   <div class="panel active" id="p0">
     <div class="card">
       <div class="card-title">Paste a listing URL or listing text</div>
+      <!-- NEW: Empty state guidance -->
+      <p class="input-guide">Paste a Zillow listing URL to analyze this property</p>
+      <p class="input-example">Example: https://www.zillow.com/homedetails/123-main-st-nashville-tn/12345678_zpid/</p>
       <div class="url-row">
         <input class="url-input" type="text" id="listingUrl"
           placeholder="Paste a Zillow, Realtor.com, or Redfin URL — or paste the listing page text" />
@@ -336,6 +353,8 @@
 
   <!-- ═══ PANEL 3: Verdict ═══ -->
   <div class="panel" id="p3">
+    <!-- NEW: Results Section Header -->
+    <h2 class="results-heading">Investment Analysis Results</h2>
     <div id="verdictBox"></div>
     <div id="metricsBox"></div>
     <div id="sensitivityBox"></div>
@@ -345,6 +364,16 @@
       <button class="nav-btn primary" onclick="reset()">Analyze another property</button>
     </div>
   </div>
+</div>
+
+<!-- NEW: Disclaimer / Credibility Signals -->
+<div class="disclaimer">
+  <p class="disclaimer-title">How this analysis works</p>
+  <ul class="disclaimer-list">
+    <li>Market nightly rates and occupancy estimates are fetched live from Airbnb data via AI web search for your specific city and bedroom count</li>
+    <li>Financial projections (IRR, NPV, cash-on-cash) use standard real estate investment formulas over a 10-year holding period with 3% annual appreciation</li>
+    <li>Results are estimates for planning purposes — always verify with a licensed real estate professional before purchasing</li>
+  </ul>
 </div>
 
 <script>
