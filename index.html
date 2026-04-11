@@ -994,7 +994,7 @@ function calculate() {
       `the present value of all future rental income is <strong>${fmtD(incomeValue)}</strong> — ` +
       (incomeValue >= price ? `exceeding` : `approaching`) + ` the ${fmtD(price)} asking price. ` +
       `You're putting ${fmtD(initialInvestment)} in and ${incomeStr}. ` +
-      `Cash-on-Cash return is <strong>${fmtP(cashOnCash)}/yr</strong> (display only); cap rate is <strong>${fmtP(capRate)}</strong> (display only).`;
+      `Cash-on-Cash return is <strong>${fmtP(cashOnCash)}/yr</strong> (display only); cap rate (property yield, before financing) is <strong>${fmtP(capRate)}</strong> (display only).`;
   } else if (vClass === 'amber') {
     summaryText = `This deal is <strong>borderline</strong>. NPV (Income Value) of <strong>${fmtD(incomeValue)}</strong> covers ` +
       `${Math.round(incomeValue / price * 100)}% of the ${fmtD(price)} asking price — income alone doesn't fully justify the price. ` +
@@ -1025,7 +1025,7 @@ function calculate() {
         <div class="tags">
           ${incomeValue ? `<span class="tag ${incomeValue>=price?'tag-green':incomeValue>=price*0.7?'tag-amber':'tag-red'}">NPV ${fmtD(incomeValue)}</span>` : ''}
           <span class="tag tag-neutral">CoC ${fmtP(cashOnCash)}/yr</span>
-          <span class="tag tag-neutral">Cap rate ${fmtP(capRate)}</span>
+          <span class="tag tag-neutral" title="Ignores financing and growth">Cap rate ${fmtP(capRate)}</span>
           <span class="tag ${moNetCF>=0?'tag-green':'tag-red'}">${moNetCF>=0?'+':''}${fmtD(moNetCF)}/mo</span>
         </div>
         <div style="margin-top:8px">${dataLabel}</div>
@@ -1134,9 +1134,9 @@ function calculate() {
         <div class="mx" style="color:${cocClr}">${cashOnCash>=riskLevelPct?`✓ Exceeds ${fmtP(riskLevelPct)} target`:cashOnCash>=0?`~ Below ${fmtP(riskLevelPct)} target`:'✗ Negative — net loss'}</div>
       </div>
       <div class="metric">
-        <div class="ml">Cap Rate</div>
+        <div class="ml has-tip" data-tip="Ignores financing and growth">Cap Rate (Property Yield — before financing)</div>
         <div class="mv">${fmtP(capRate)}</div>
-        <div class="ms">Annual yield if you paid all cash — property's raw income power, independent of financing</div>
+        <div class="ms">Annual yield if you paid all cash — property's raw income power, independent of financing or growth assumptions</div>
         <div class="mx">${capRate>=6?'✓ Above 6% STR benchmark':capRate>=4?'~ Typical 4–6% range':'✗ Below 4% — low yield'}</div>
       </div>
       <div class="metric">
