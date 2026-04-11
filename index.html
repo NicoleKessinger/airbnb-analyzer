@@ -316,7 +316,7 @@
           </select>
         </div>
         <div class="form-group"><label>City / Market</label><input type="text" id="city" value="" placeholder="e.g. Nashville, TN" /></div>
-        <div class="form-group"><label>Renovation budget ($)</label><input type="number" id="reno" value="0" /></div>
+        <div class="form-group"><label>Closing costs ($)</label><input type="number" id="closingCosts" value="" placeholder="e.g. 9700" /></div>
         <div class="form-group"><label>Annual property tax ($)</label><input type="number" id="tax" value="" placeholder="e.g. 6000" /></div>
       </div>
     </div>
@@ -857,8 +857,8 @@ function calcExtraPayoff(principal, annualRate, term, extra) {
 function calculate() {
   // ── Read all form inputs ───────────────────────────────────────────────────
   const price    = parseFloat(document.getElementById('price').value)      || 485000;
-  const down     = parseFloat(document.getElementById('down').value)       || price * 0.2;
-  const reno     = parseFloat(document.getElementById('reno').value)       || 0;
+  const down         = parseFloat(document.getElementById('down').value)         || price * 0.2;
+  const closingCosts = parseFloat(document.getElementById('closingCosts').value) || 0;
   const propTax  = parseFloat(document.getElementById('tax').value)        || 6000;
   const mortRate = parseFloat(document.getElementById('rate').value)       || 6.8;
   const termYrs  = parseInt(document.getElementById('term').value)         || 30;
@@ -887,7 +887,7 @@ function calculate() {
 
   // ── Core income calculations ──────────────────────────────────────────────
   const principal     = price - down;
-  const totalInvested = down + reno;              // CF0: actual cash out of pocket at t=0
+  const initialInvestment = down + closingCosts;  // used only in NPV and payback — never in monthly expenses
   const monthlyMtg    = calcMortgage(principal, mortRate, termYrs);
   const daysRented    = Math.round(365 * occupancy);
   const grossRev      = daysRented * nightlyRate;
@@ -915,7 +915,7 @@ function calculate() {
   }
 
   // ── Additional metrics ────────────────────────────────────────────────────
-  const cashOnCash = (annualCF / totalInvested) * 100;
+  const cashOnCash = (annualCF / initialInvestment) * 100;
   const dscr       = noi / annualMtg;
 
   // ── Year 1 amortization ───────────────────────────────────────────────────
@@ -937,7 +937,7 @@ function calculate() {
     ? `At <strong>${occPct}%</strong> occupancy you're <strong>${beGap}pp above</strong> break-even of <strong>${beOcc.toFixed(1)}%</strong>.`
     : `Your projected <strong>${occPct}%</strong> occupancy is <strong>${Math.abs(beGap)}pp short</strong> of the <strong>${beOcc.toFixed(1)}%</strong> break-even.`;
   const paybackLine = annualCF > 0
-    ? `At ${fmtD(Math.abs(moNetCF))}/mo net, the ${fmtD(totalInvested)} investment recovers in <strong>${(totalInvested / annualCF).toFixed(1)} yrs</strong> from cash flow.`
+    ? `At ${fmtD(Math.abs(moNetCF))}/mo net, the ${fmtD(initialInvestment)} investment recovers in <strong>${(initialInvestment / annualCF).toFixed(1)} yrs</strong> from cash flow.`
     : `Cash flow is negative — down payment is not recovering.`;
   const hoaRow = hoaMonthly > 0
     ? `<div class="cf-row"><span class="cfl">HOA fee</span><span class="cfv">−${fmtD(hoaMonthly)}</span></div>` : '';
@@ -984,11 +984,11 @@ function calculate() {
   let summaryText;
   const diff = (cashOnCash - riskLevelPct).toFixed(1);
   if (vClass === 'green') {
-    summaryText = `This is a <strong>strong income investment</strong>. You're putting ${fmtD(totalInvested)} down and ${incomeStr}. ` +
+    summaryText = `This is a <strong>strong income investment</strong>. You're putting ${fmtD(initialInvestment)} down and ${incomeStr}. ` +
       `The <strong>${fmtP(cashOnCash)}/yr cash-on-cash return</strong> exceeds your ${fmtP(riskLevelPct)} target by ${Math.abs(diff)}pp. ` +
       (incomeValue ? `NPV (Income Value) of <strong>${fmtD(incomeValue)}</strong> ` + (incomeValue >= price ? 'exceeds' : 'approaches') + ` the ${fmtD(price)} asking price.` : '');
   } else if (vClass === 'amber') {
-    summaryText = `This deal is <strong>borderline</strong>. You're putting ${fmtD(totalInvested)} down and ${incomeStr}. ` +
+    summaryText = `This deal is <strong>borderline</strong>. You're putting ${fmtD(initialInvestment)} down and ${incomeStr}. ` +
       `The <strong>${fmtP(cashOnCash)}/yr cash return</strong> is below your ${fmtP(riskLevelPct)} target. ` +
       (incomeValue ? `NPV (Income Value) of <strong>${fmtD(incomeValue)}</strong> is below the ${fmtD(price)} asking price — income alone doesn't fully justify the price. ` : '') +
       `Consider negotiating a lower purchase price or targeting higher nightly rates.`;

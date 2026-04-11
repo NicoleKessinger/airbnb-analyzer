@@ -4,6 +4,19 @@
  */
 
 /**
+ * Computes total initial investment — the capital deployed at purchase.
+ * This value is used ONLY in NPV and payback calculations; it must never
+ * be included in monthly operating expenses or cash flow.
+ *
+ * @param {number} downPayment   - Down payment amount ($).
+ * @param {number} closingCosts  - Closing costs (title, origination, fees, etc.) ($).
+ * @returns {number} Total initial investment ($).
+ */
+export function buildInitialInvestment(downPayment, closingCosts) {
+  return downPayment + closingCosts;
+}
+
+/**
  * Annualizes a monthly cash flow figure.
  *
  * @param {number} monthlyCashFlow - Net cash flow for a single month ($).
@@ -21,7 +34,9 @@ export function calculateAnnualCashFlow(monthlyCashFlow) {
  * @param {number} C1               - Next-period cash flow (year 1), already grown by g ($).
  * @param {number} r                - Discount rate as a decimal (e.g. 0.08 for 8%).
  * @param {number} g                - Perpetual growth rate as a decimal (e.g. 0.02 for 2%).
- * @param {number} initialInvestment - Total capital invested ($).
+ * @param {number} initialInvestment - Total capital deployed at purchase. Use
+ *   {@link buildInitialInvestment}(downPayment, closingCosts) to construct this value.
+ *   Must NOT include monthly operating expenses.
  * @returns {number} Net present value ($).
  * @throws {Error} If r <= g (perpetuity formula is undefined or negative).
  */
@@ -40,7 +55,8 @@ export function calculateNPVPerpetuity(C1, r, g, initialInvestment) {
  * Formula: CoC = annualCashFlow / initialInvestment
  *
  * @param {number} annualCashFlow     - Annual net cash flow ($).
- * @param {number} initialInvestment  - Total capital invested (down payment + closing costs, $).
+ * @param {number} initialInvestment  - Total capital deployed at purchase. Use
+ *   {@link buildInitialInvestment}(downPayment, closingCosts) to construct this value.
  * @returns {number} CoC return as a decimal (e.g. 0.08 for 8%).
  * @throws {Error} If initialInvestment is zero or negative.
  */
