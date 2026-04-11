@@ -125,9 +125,10 @@
   .verdict-sub { font-size: 13px; margin-top: 3px; color: #6b7280; }
   .tags { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 6px; }
   .tag { font-size: 12px; font-weight: 500; padding: 3px 10px; border-radius: 99px; }
-  .tag-green { background: #dcfce7; color: #166534; }
-  .tag-amber { background: #fef3c7; color: #92400e; }
-  .tag-red   { background: #fee2e2; color: #991b1b; }
+  .tag-green   { background: #dcfce7; color: #166534; }
+  .tag-amber   { background: #fef3c7; color: #92400e; }
+  .tag-red     { background: #fee2e2; color: #991b1b; }
+  .tag-neutral { background: #f3f4f6; color: #6b7280; } /* display-only — not used for verdict */
 
   /* Metrics */
   .metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 1rem; }
@@ -944,17 +945,18 @@ function calculate() {
   const maintenanceRow = maintenance > 0
     ? `<div class="cf-row"><span class="cfl">Maintenance fees (pool, lawn, etc.)</span><span class="cfv">−${fmtD(maintenance)}</span></div>` : '';
 
-  // ── Verdict — income-value first ─────────────────────────────────────────
+  // ── Verdict — NPV is the sole decision driver ────────────────────────────
+  // CoC and cap rate are display-only; they do not affect the verdict outcome.
   let vClass, vTitle, vSub;
-  if (cashOnCash >= riskLevelPct && incomeValue && incomeValue >= price * 0.8) {
+  if (incomeValue && incomeValue >= price) {
     vClass='green'; vTitle='Strong income investment';
-    vSub=`${fmtP(cashOnCash)}/yr cash return exceeds your ${fmtP(riskLevelPct)} target. NPV (Income Value) ${incomeValue >= price ? 'meets' : 'approaches'} the asking price.`;
-  } else if (cashOnCash >= riskLevelPct * 0.6 || (incomeValue && incomeValue >= price * 0.65)) {
+    vSub=`NPV (Income Value) of <strong>${fmtD(incomeValue)}</strong> meets or exceeds the ${fmtD(price)} asking price — the income stream fully justifies this investment.`;
+  } else if (incomeValue && incomeValue >= price * 0.7) {
     vClass='amber'; vTitle='Marginal income investment';
-    vSub=`${fmtP(cashOnCash)}/yr cash return is below your ${fmtP(riskLevelPct)} target. Negotiate price down or boost nightly rates.`;
+    vSub=`NPV (Income Value) of <strong>${fmtD(incomeValue)}</strong> is below the ${fmtD(price)} asking price. Negotiate the price down or target higher nightly rates.`;
   } else {
     vClass='red'; vTitle='Challenging investment';
-    vSub=`${fmtP(cashOnCash)}/yr cash return is well below your ${fmtP(riskLevelPct)} target. Income does not justify the price.`;
+    vSub=`NPV (Income Value) of <strong>${fmtD(incomeValue ? incomeValue : 0)}</strong> is well below the ${fmtD(price)} asking price. Income alone cannot justify this price.`;
   }
 
   const icon = vClass==='green' ? '✓' : vClass==='amber' ? '!' : '✗';
@@ -982,20 +984,21 @@ function calculate() {
     ? `generating <strong>${fmtD(moNetCF)}/month</strong> in net income`
     : `running at a <strong>${fmtD(Math.abs(moNetCF))}/month</strong> net loss`;
   let summaryText;
-  const diff = (cashOnCash - riskLevelPct).toFixed(1);
   if (vClass === 'green') {
-    summaryText = `This is a <strong>strong income investment</strong>. You're putting ${fmtD(initialInvestment)} down and ${incomeStr}. ` +
-      `The <strong>${fmtP(cashOnCash)}/yr cash-on-cash return</strong> exceeds your ${fmtP(riskLevelPct)} target by ${Math.abs(diff)}pp. ` +
-      (incomeValue ? `NPV (Income Value) of <strong>${fmtD(incomeValue)}</strong> ` + (incomeValue >= price ? 'exceeds' : 'approaches') + ` the ${fmtD(price)} asking price.` : '');
+    summaryText = `This is a <strong>strong income investment</strong>. At your ${fmtP(riskLevelPct)} discount rate and ${fmtP(growthPct)} growth assumption, ` +
+      `the present value of all future rental income is <strong>${fmtD(incomeValue)}</strong> — ` +
+      (incomeValue >= price ? `exceeding` : `approaching`) + ` the ${fmtD(price)} asking price. ` +
+      `You're putting ${fmtD(initialInvestment)} in and ${incomeStr}. ` +
+      `Cash-on-Cash return is <strong>${fmtP(cashOnCash)}/yr</strong> (display only); cap rate is <strong>${fmtP(capRate)}</strong> (display only).`;
   } else if (vClass === 'amber') {
-    summaryText = `This deal is <strong>borderline</strong>. You're putting ${fmtD(initialInvestment)} down and ${incomeStr}. ` +
-      `The <strong>${fmtP(cashOnCash)}/yr cash return</strong> is below your ${fmtP(riskLevelPct)} target. ` +
-      (incomeValue ? `NPV (Income Value) of <strong>${fmtD(incomeValue)}</strong> is below the ${fmtD(price)} asking price — income alone doesn't fully justify the price. ` : '') +
+    summaryText = `This deal is <strong>borderline</strong>. NPV (Income Value) of <strong>${fmtD(incomeValue)}</strong> covers ` +
+      `${Math.round(incomeValue / price * 100)}% of the ${fmtD(price)} asking price — income alone doesn't fully justify the price. ` +
+      `You're putting ${fmtD(initialInvestment)} in and ${incomeStr}. ` +
       `Consider negotiating a lower purchase price or targeting higher nightly rates.`;
   } else {
-    summaryText = `<strong>The numbers are challenging.</strong> The <strong>${fmtP(cashOnCash)}/yr cash return</strong> falls well short of your ${fmtP(riskLevelPct)} target. ` +
-      (moNetCF < 0 ? `This property runs at a <strong>${fmtD(Math.abs(moNetCF))}/month</strong> net loss. ` : '') +
-      (incomeValue ? `NPV (Income Value) of <strong>${fmtD(incomeValue)}</strong> is significantly below the ${fmtD(price)} asking price. ` : '') +
+    summaryText = `<strong>The numbers are challenging.</strong> NPV (Income Value) of <strong>${fmtD(incomeValue ? incomeValue : 0)}</strong> ` +
+      `is significantly below the ${fmtD(price)} asking price — the income stream does not justify this investment at current rates. ` +
+      (moNetCF < 0 ? `This property also runs at a <strong>${fmtD(Math.abs(moNetCF))}/month</strong> net loss. ` : '') +
       `To improve: negotiate a lower price, raise nightly rates, or find a higher-demand market.`;
   }
 
@@ -1006,10 +1009,18 @@ function calculate() {
       <div style="flex:1">
         <div class="verdict-title">${vTitle}</div>
         <div class="verdict-sub">${vSub}</div>
+
+        ${incomeValue ? `
+        <div style="margin:10px 0 6px">
+          <span style="font-size:13px;font-weight:600;opacity:0.85">NPV (Income Value):</span>
+          <span style="font-size:20px;font-weight:700;margin-left:6px">${fmtD(incomeValue)}</span>
+          <div style="font-size:11px;opacity:0.7;margin-top:2px">This is the value today of future rental income</div>
+        </div>` : ''}
+
         <div class="tags">
-          <span class="tag ${cashOnCash>=riskLevelPct?'tag-green':cashOnCash>=0?'tag-amber':'tag-red'}">CoC ${fmtP(cashOnCash)}/yr</span>
           ${incomeValue ? `<span class="tag ${incomeValue>=price?'tag-green':incomeValue>=price*0.7?'tag-amber':'tag-red'}">NPV ${fmtD(incomeValue)}</span>` : ''}
-          <span class="tag tag-amber">Cap rate ${fmtP(capRate)}</span>
+          <span class="tag tag-neutral">CoC ${fmtP(cashOnCash)}/yr</span>
+          <span class="tag tag-neutral">Cap rate ${fmtP(capRate)}</span>
           <span class="tag ${moNetCF>=0?'tag-green':'tag-red'}">${moNetCF>=0?'+':''}${fmtD(moNetCF)}/mo</span>
         </div>
         <div style="margin-top:8px">${dataLabel}</div>
