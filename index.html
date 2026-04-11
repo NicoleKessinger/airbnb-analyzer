@@ -129,6 +129,10 @@
   .tag-amber   { background: #fef3c7; color: #92400e; }
   .tag-red     { background: #fee2e2; color: #991b1b; }
   .tag-neutral { background: #f3f4f6; color: #6b7280; } /* display-only — not used for verdict */
+  .mortgage-fields { transition: opacity 0.2s, max-height 0.25s; overflow: hidden; }
+  .mortgage-fields.hidden { opacity: 0.35; pointer-events: none; max-height: 0; margin: 0; }
+  .all-cash-toggle { display: flex; align-items: center; gap: 8px; padding: 10px 12px; background: #f5f3ff; border: 1px solid #ddd6fe; border-radius: 8px; margin-bottom: 14px; cursor: pointer; font-size: 13px; font-weight: 500; color: #4c1d95; }
+  .all-cash-toggle input[type="checkbox"] { width: 16px; height: 16px; accent-color: #5b21b6; cursor: pointer; }
 
   /* Metrics */
   .metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 1rem; }
@@ -329,18 +333,26 @@
   <!-- ═══ PANEL 1: Financing ═══ -->
   <div class="panel" id="p1">
     <div class="card">
-      <div class="card-title">Mortgage details</div>
-      <div class="form-grid">
-        <div class="form-group"><label>Down payment ($)</label><input type="number" id="down" value="" placeholder="e.g. 97000" /></div>
-        <div class="form-group"><label>Mortgage rate (%)</label><input type="number" id="rate" value="6.8" step="0.1" /></div>
-        <div class="form-group">
-          <label>Loan term</label>
-          <select id="term">
-            <option value="30" selected>30-year fixed</option>
-            <option value="15">15-year fixed</option>
-          </select>
+      <div class="card-title" id="mortgageCardTitle">Financing details</div>
+      <label class="all-cash-toggle">
+        <input type="checkbox" id="allCash" onchange="toggleAllCash()" />
+        All cash purchase (no mortgage)
+      </label>
+      <div class="mortgage-fields" id="mortgageFields">
+        <div class="form-grid">
+          <div class="form-group"><label>Down payment ($)</label><input type="number" id="down" value="" placeholder="e.g. 97000" /></div>
+          <div class="form-group"><label>Mortgage rate (%)</label><input type="number" id="rate" value="6.8" step="0.1" /></div>
+          <div class="form-group">
+            <label>Loan term</label>
+            <select id="term">
+              <option value="30" selected>30-year fixed</option>
+              <option value="15">15-year fixed</option>
+            </select>
+          </div>
+          <div class="form-group"><label>Extra monthly payment ($)</label><input type="number" id="extra" value="0" /></div>
         </div>
-        <div class="form-group"><label>Extra monthly payment ($)</label><input type="number" id="extra" value="0" /></div>
+      </div>
+      <div class="form-grid" style="margin-top:12px">
         <div class="form-group"><label>Annual insurance ($)</label><input type="number" id="insurance" value="2400" /></div>
         <div class="form-group"><label>Monthly HOA fee ($)</label><input type="number" id="hoa" value="0" placeholder="0 if none" /></div>
         <div class="form-group"><label>Monthly maintenance fees ($)</label><input type="number" id="maintenance" value="0" placeholder="pool, lawn, etc." /></div>
@@ -862,7 +874,8 @@ function calcExtraPayoff(principal, annualRate, term, extra) {
 function calculate() {
   // ── Read all form inputs ───────────────────────────────────────────────────
   const price    = parseFloat(document.getElementById('price').value)      || 485000;
-  const down         = parseFloat(document.getElementById('down').value)         || price * 0.2;
+  const allCash  = document.getElementById('allCash')?.checked || false;
+  const down         = allCash ? price : (parseFloat(document.getElementById('down').value) || price * 0.2);
   const closingCosts = parseFloat(document.getElementById('closingCosts').value) || 0;
   const propTax  = parseFloat(document.getElementById('tax').value)        || 6000;
   const mortRate = parseFloat(document.getElementById('rate').value)       || 6.8;
@@ -891,9 +904,9 @@ function calculate() {
   const occupancy   = customOcc ? customOcc / 100 : rOccs[selectedRate];
 
   // ── Core income calculations ──────────────────────────────────────────────
-  const principal     = price - down;
-  const initialInvestment = down + closingCosts;  // used only in NPV and payback — never in monthly expenses
-  const monthlyMtg    = calcMortgage(principal, mortRate, termYrs);
+  const principal     = allCash ? 0 : price - down;
+  const initialInvestment = (allCash ? price : down) + closingCosts;  // used only in NPV and payback — never in monthly expenses
+  const monthlyMtg    = allCash ? 0 : calcMortgage(principal, mortRate, termYrs);
   const daysRented    = Math.round(365 * occupancy);
   const grossRev      = daysRented * nightlyRate;
   const cleaningRev   = staysPM * 12 * cleanFee;
@@ -923,7 +936,7 @@ function calculate() {
 
   // ── Additional metrics ────────────────────────────────────────────────────
   const cashOnCash = (annualCF / initialInvestment) * 100;
-  const dscr       = noi / annualMtg;
+  const dscr       = allCash ? null : noi / annualMtg;
 
   // ── Year 1 amortization ───────────────────────────────────────────────────
   const r = mortRate / 100 / 12;
@@ -987,8 +1000,8 @@ function calculate() {
 
   // ── Per-metric colors ─────────────────────────────────────────────────────
   const cocClr  = cashOnCash >= riskLevelPct ? '#16a34a' : cashOnCash >= riskLevelPct * 0.5 ? '#d97706' : '#dc2626';
-  const dscrClr = dscr >= 1.25 ? '#166534' : dscr >= 1.0 ? '#92400e' : '#991b1b';
-  const dscrNote = dscr >= 1.25 ? '✓ Strong — preferred by lenders' : dscr >= 1.0 ? '~ Marginal — just covers debt' : '✗ Rent doesn\'t cover the mortgage';
+  const dscrClr  = allCash ? '#6b7280' : dscr >= 1.25 ? '#166534' : dscr >= 1.0 ? '#92400e' : '#991b1b';
+  const dscrNote = allCash ? 'N/A — all cash purchase, no debt' : dscr >= 1.25 ? '✓ Strong — preferred by lenders' : dscr >= 1.0 ? '~ Marginal — just covers debt' : '✗ Rent doesn\'t cover the mortgage';
 
   // ── Plain-English summary ─────────────────────────────────────────────────
   const incomeStr = moNetCF >= 0
@@ -1053,7 +1066,7 @@ function calculate() {
       <div class="cf-row"><span class="cfl">Cleaning fees (${staysPM} stays/mo × ${fmtD(cleanFee)}/stay)</span><span class="cfv">${fmtD(moCleanRev)}</span></div>
       <div class="cf-divider"><span>Total monthly revenue</span><span>${fmtD(moTotalRev)}</span></div>
       <div class="cf-sub cf-sub-exp" style="margin-top:16px;">Expenses</div>
-      <div class="cf-row"><span class="cfl">Mortgage (${termYrs}-yr fixed @ ${mortRate}%)</span><span class="cfv">−${fmtD(monthlyMtg)}</span></div>
+      ${allCash ? '' : `<div class="cf-row"><span class="cfl">Mortgage (${termYrs}-yr fixed @ ${mortRate}%)</span><span class="cfv">−${fmtD(monthlyMtg)}</span></div>`}
       <div class="cf-row"><span class="cfl">Property tax</span><span class="cfv">−${fmtD(moPropTax)}</span></div>
       <div class="cf-row"><span class="cfl">Insurance</span><span class="cfv">−${fmtD(moInsurance)}</span></div>
       ${hoaRow}${maintenanceRow}
@@ -1159,7 +1172,7 @@ function calculate() {
       </div>
       <div class="metric">
         <div class="ml">Debt Coverage (DSCR)</div>
-        <div class="mv" style="color:${dscrClr}">${dscr.toFixed(2)}x</div>
+        <div class="mv" style="color:${dscrClr}">${allCash ? 'N/A' : dscr.toFixed(2) + 'x'}</div>
         <div class="ms">Rental income ÷ mortgage payment — does rent cover the debt?</div>
         <div class="mx" style="color:${dscrClr}">${dscrNote}</div>
       </div>
@@ -1199,24 +1212,42 @@ function calculate() {
     </div>`;
 
   // ── RENDER: Amortization ──────────────────────────────────────────────────
-  const prinPct = Math.round(yr1Prin / (yr1Prin + yr1Int) * 100);
-  const extraHtml = extraInfo
-    ? `<div class="extra-tip">Extra ${fmtD(extraPmt)}/mo → saves ${fmtD(extraInfo.interestSaved)} in interest · pays off ${Math.round((termYrs*12-extraInfo.months)/12)} yrs early</div>`
-    : '';
-  document.getElementById('amortBox').innerHTML = `
-    <div class="card">
-      <div class="slabel">Mortgage amortization — year 1</div>
-      <div class="amort-bar">
-        <div class="amort-p" style="width:${prinPct}%"></div>
-        <div class="amort-i" style="width:${100-prinPct}%"></div>
-      </div>
-      <div class="legend">
-        <span><span class="dot" style="background:#5b21b6"></span>Principal ${fmtD(yr1Prin)}</span>
-        <span><span class="dot" style="background:#c4b5fd"></span>Interest ${fmtD(yr1Int)}</span>
-      </div>${extraHtml}
-    </div>`;
+  if (allCash) {
+    document.getElementById('amortBox').innerHTML = `
+      <div class="card">
+        <div class="slabel">Mortgage amortization</div>
+        <div style="font-size:13px;color:#6b7280;padding:6px 0">
+          All cash purchase — no mortgage, no amortization schedule.
+        </div>
+      </div>`;
+  } else {
+    const prinPct = Math.round(yr1Prin / (yr1Prin + yr1Int) * 100);
+    const extraHtml = extraInfo
+      ? `<div class="extra-tip">Extra ${fmtD(extraPmt)}/mo → saves ${fmtD(extraInfo.interestSaved)} in interest · pays off ${Math.round((termYrs*12-extraInfo.months)/12)} yrs early</div>`
+      : '';
+    document.getElementById('amortBox').innerHTML = `
+      <div class="card">
+        <div class="slabel">Mortgage amortization — year 1</div>
+        <div class="amort-bar">
+          <div class="amort-p" style="width:${prinPct}%"></div>
+          <div class="amort-i" style="width:${100-prinPct}%"></div>
+        </div>
+        <div class="legend">
+          <span><span class="dot" style="background:#5b21b6"></span>Principal ${fmtD(yr1Prin)}</span>
+          <span><span class="dot" style="background:#c4b5fd"></span>Interest ${fmtD(yr1Int)}</span>
+        </div>${extraHtml}
+      </div>`;
+  }
 
   goTo(3);
+}
+
+// ── All-cash toggle ───────────────────────────────────────────────────────────
+function toggleAllCash() {
+  const allCash = document.getElementById('allCash').checked;
+  document.getElementById('mortgageFields').classList.toggle('hidden', allCash);
+  document.getElementById('mortgageCardTitle').textContent =
+    allCash ? 'Purchase details (all cash)' : 'Financing details';
 }
 
 // ── Toggle exit sale section visibility ───────────────────────────────────────
