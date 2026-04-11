@@ -907,8 +907,10 @@ function calculate() {
   const principal     = allCash ? 0 : price - down;
   const initialInvestment = (allCash ? price : down) + closingCosts;  // used only in NPV and payback — never in monthly expenses
   const monthlyMtg    = allCash ? 0 : calcMortgage(principal, mortRate, termYrs);
-  const daysRented    = Math.round(365 * occupancy);
-  const grossRev      = daysRented * nightlyRate;
+  // Revenue fix: round at the monthly level so displayed nights × rate = displayed revenue
+  const nightsPerMonth = Math.round(365 * occupancy / 12);
+  const daysRented     = nightsPerMonth * 12;          // annual derived from rounded monthly
+  const grossRev       = daysRented * nightlyRate;     // nightsPerMonth × 12 × rate → monthly = nightsPerMonth × rate ✓
   const cleaningRev   = staysPM * 12 * cleanFee;
   const totalRev      = grossRev + cleaningRev;
   const mgmtFee       = grossRev * mgmtPct;
@@ -922,9 +924,13 @@ function calculate() {
   const annualCF      = totalRev - totalExp;
   const capRate       = (noi / price) * 100;
 
-  // ── SECTION 2: Intrinsic Value + NPV ────────────────────────────────────
-  // Intrinsic Value = C1 / (r - g)  — what the income stream is worth in perpetuity
-  // NPV             = Intrinsic Value − Purchase Price  — true economic profit/loss
+  // ── SECTION 2: Equity Value + NPV (equity basis) ────────────────────────
+  // Equity Value = C1 / (r - g)
+  //   Financed:  PV of cash flows AFTER mortgage  → represents levered equity return
+  //   All-cash:  PV of cash flows BEFORE mortgage  → represents unlevered property value
+  // NPV = Equity Value − initialInvestment
+  //   Financed:  initialInvestment = downPayment + closingCosts
+  //   All-cash:  initialInvestment = purchasePrice + closingCosts
   const c1 = annualCF * (1 + g);
   let incomeValue = null, incomeValueErr = null;
   if (discount <= g) {
@@ -932,7 +938,7 @@ function calculate() {
   } else {
     incomeValue = c1 / (discount - g);
   }
-  const npv = incomeValue !== null ? incomeValue - price : null;
+  const npv = incomeValue !== null ? incomeValue - initialInvestment : null;
 
   // ── Additional metrics ────────────────────────────────────────────────────
   const cashOnCash = (annualCF / initialInvestment) * 100;
@@ -969,26 +975,27 @@ function calculate() {
   const maintenanceRow = maintenance > 0
     ? `<div class="cf-row"><span class="cfl">Maintenance fees (pool, lawn, etc.)</span><span class="cfv">−${fmtD(maintenance)}</span></div>` : '';
 
-  // ── Verdict — true NPV (intrinsic value − purchase price) is the sole driver
+  // ── Verdict — NPV = Equity Value − initialInvestment (equity basis)
   // CoC and cap rate are display-only; they do not affect the verdict outcome.
+  const investLabel = allCash ? `${fmtD(price)} purchase price` : `${fmtD(initialInvestment)} initial investment`;
   let vClass, vTitle, vSub;
   if (npv !== null && npv > 0) {
     vClass='green'; vTitle='Strong income investment';
-    vSub=`NPV <strong>${fmtD(npv, true)}</strong> — Intrinsic Value (<strong>${fmtD(incomeValue)}</strong>) exceeds the ${fmtD(price)} asking price. The income stream fully justifies this investment.`;
-  } else if (npv !== null && npv > -(price * 0.3)) {
+    vSub=`NPV <strong>${fmtD(npv, true)}</strong> — Equity Value (<strong>${fmtD(incomeValue)}</strong>) exceeds your ${investLabel}. The income stream fully justifies this investment.`;
+  } else if (npv !== null && npv > -(initialInvestment * 0.3)) {
     vClass='amber'; vTitle='Marginal income investment';
-    vSub=`NPV <strong>${fmtD(npv, true)}</strong> — Intrinsic Value (<strong>${fmtD(incomeValue)}</strong>) is below the ${fmtD(price)} asking price. Negotiate the price down or target higher nightly rates.`;
+    vSub=`NPV <strong>${fmtD(npv, true)}</strong> — Equity Value (<strong>${fmtD(incomeValue)}</strong>) is below your ${investLabel}. Negotiate the price down or target higher nightly rates.`;
   } else {
     vClass='red'; vTitle='Challenging investment';
-    vSub=`NPV <strong>${fmtD(npv !== null ? npv : -price, true)}</strong> — Intrinsic Value (<strong>${fmtD(incomeValue ?? 0)}</strong>) is well below the ${fmtD(price)} asking price. Income alone cannot justify this price.`;
+    vSub=`NPV <strong>${fmtD(npv !== null ? npv : -initialInvestment, true)}</strong> — Equity Value (<strong>${fmtD(incomeValue ?? 0)}</strong>) is well below your ${investLabel}. Income alone cannot justify this investment.`;
   }
 
   const icon = vClass==='green' ? '✓' : vClass==='amber' ? '!' : '✗';
   const dataLabel = marketDataLoaded ? `<span style="font-size:11px;color:#166534;font-weight:500"><span class="live-dot"></span>Rates from live market data</span>` : '';
 
   // ── Monthly breakdown ─────────────────────────────────────────────────────
-  const nightsPerMonth = Math.round(daysRented / 12);
-  const moRentalRev    = grossRev / 12;
+  // nightsPerMonth already defined above (hoisted to fix revenue rounding)
+  const moRentalRev    = grossRev / 12;  // = nightsPerMonth × nightlyRate (exact)
   const moCleanRev     = cleaningRev / 12;
   const moTotalRev     = totalRev / 12;
   const moPropTax      = propTax / 12;
@@ -1008,20 +1015,20 @@ function calculate() {
     ? `generating <strong>${fmtD(moNetCF)}/month</strong> in net income`
     : `running at a <strong>${fmtD(Math.abs(moNetCF))}/month</strong> net loss`;
   let summaryText;
+  const ivPct = incomeValue ? Math.round(incomeValue / initialInvestment * 100) : 0;
   if (vClass === 'green') {
     summaryText = `This is a <strong>strong income investment</strong>. At your ${fmtP(riskLevelPct)} discount rate and ${fmtP(growthPct)} growth assumption, ` +
-      `the Intrinsic Value of this property's income stream is <strong>${fmtD(incomeValue)}</strong> — exceeding the ${fmtD(price)} asking price. ` +
-      `NPV is <strong>${fmtD(npv, true)}</strong>, meaning income-based value exceeds what you pay. ` +
+      `Equity Value is <strong>${fmtD(incomeValue)}</strong> — exceeding your ${investLabel} of ${fmtD(initialInvestment)}. ` +
+      `NPV is <strong>${fmtD(npv, true)}</strong>: income-based value exceeds your capital outlay. ` +
       `You're putting ${fmtD(initialInvestment)} in and ${incomeStr}. ` +
       `Cash-on-Cash return is <strong>${fmtP(cashOnCash)}/yr</strong> (display only); cap rate (property yield, before financing) is <strong>${fmtP(capRate)}</strong> (display only).`;
   } else if (vClass === 'amber') {
-    summaryText = `This deal is <strong>borderline</strong>. Intrinsic Value of <strong>${fmtD(incomeValue)}</strong> covers ` +
-      `${Math.round(incomeValue / price * 100)}% of the ${fmtD(price)} asking price — income alone doesn't fully justify the price. ` +
+    summaryText = `This deal is <strong>borderline</strong>. Equity Value of <strong>${fmtD(incomeValue)}</strong> is ${ivPct}% of your ${fmtD(initialInvestment)} ${allCash ? 'purchase price' : 'initial investment'} — income doesn't fully recover your capital outlay. ` +
       `NPV is <strong>${fmtD(npv, true)}</strong>. You're putting ${fmtD(initialInvestment)} in and ${incomeStr}. ` +
       `Consider negotiating a lower purchase price or targeting higher nightly rates.`;
   } else {
-    summaryText = `<strong>The numbers are challenging.</strong> Intrinsic Value of <strong>${fmtD(incomeValue ?? 0)}</strong> ` +
-      `is significantly below the ${fmtD(price)} asking price — NPV is <strong>${fmtD(npv !== null ? npv : -price, true)}</strong>. ` +
+    summaryText = `<strong>The numbers are challenging.</strong> Equity Value of <strong>${fmtD(incomeValue ?? 0)}</strong> ` +
+      `is significantly below your ${fmtD(initialInvestment)} ${allCash ? 'purchase price' : 'initial investment'} — NPV is <strong>${fmtD(npv !== null ? npv : -initialInvestment, true)}</strong>. ` +
       `The income stream does not justify this investment at current rates. ` +
       (moNetCF < 0 ? `This property also runs at a <strong>${fmtD(Math.abs(moNetCF))}/month</strong> net loss. ` : '') +
       `To improve: negotiate a lower price, raise nightly rates, or find a higher-demand market.`;
@@ -1037,18 +1044,22 @@ function calculate() {
 
         ${incomeValue !== null ? `
         <div style="margin:10px 0 6px">
-          <div style="font-size:12px;font-weight:600;opacity:0.75;margin-bottom:2px">Intrinsic Value (Income-Based)</div>
+          <div style="font-size:12px;font-weight:600;opacity:0.75;margin-bottom:2px">Equity Value (Income-Based)</div>
           <div style="font-size:20px;font-weight:700">${fmtD(incomeValue)}</div>
-          <div style="font-size:11px;opacity:0.65;margin-top:1px">This is the value today of future rental income</div>
+          <div style="font-size:11px;opacity:0.65;margin-top:1px">
+            ${allCash
+              ? 'Value of the property based on rental income (no financing)'
+              : 'Value of your invested capital based on rental income after debt'}
+          </div>
           <div style="margin-top:8px;font-size:13px;font-weight:600">
             NPV:
             <span style="color:${npv>=0?'#16a34a':'#dc2626'};font-size:18px;font-weight:700;margin-left:4px">${fmtD(npv, true)}</span>
-            <span style="font-size:11px;font-weight:400;opacity:0.65;margin-left:6px">(Intrinsic Value − Purchase Price)</span>
+            <span style="font-size:11px;font-weight:400;opacity:0.65;margin-left:6px">(Equity Value − ${allCash ? 'Purchase Price' : 'Initial Investment'})</span>
           </div>
         </div>` : ''}
 
         <div class="tags">
-          ${npv !== null ? `<span class="tag ${npv>0?'tag-green':npv>-(price*0.3)?'tag-amber':'tag-red'}">NPV ${fmtD(npv, true)}</span>` : ''}
+          ${npv !== null ? `<span class="tag ${npv>0?'tag-green':npv>-(initialInvestment*0.3)?'tag-amber':'tag-red'}">NPV ${fmtD(npv, true)}</span>` : ''}
           <span class="tag tag-neutral">CoC ${fmtP(cashOnCash)}/yr</span>
           <span class="tag tag-neutral" title="Ignores financing and growth">Cap rate ${fmtP(capRate)}</span>
           <span class="tag ${moNetCF>=0?'tag-green':'tag-red'}">${moNetCF>=0?'+':''}${fmtD(moNetCF)}/mo</span>
@@ -1086,32 +1097,37 @@ function calculate() {
     </div>`;
 
   // ── RENDER: Investment Performance card ──────────────────────────────────
-  // Intrinsic Value = C1 / (r - g)  |  NPV = Intrinsic Value − Purchase Price
+  // Equity Value = C1 / (r - g)  |  NPV = Equity Value − initialInvestment
   let incomeValHtml;
   if (incomeValueErr) {
     incomeValHtml = `<div class="income-val-card" style="background:#fef2f2;border-color:#fecaca">
-      <div class="income-val-lbl">Intrinsic Value (Income-Based)</div>
+      <div class="income-val-lbl">Equity Value (Income-Based)</div>
       <div style="font-size:13px;color:#991b1b">${incomeValueErr}</div>
     </div>`;
   } else {
-    const ivRatio    = Math.round(incomeValue / price * 100);
-    const ivBadgeCls = incomeValue >= price * 0.9 ? 'green' : incomeValue >= price * 0.65 ? 'amber' : 'red';
-    const ivBadgeTxt = incomeValue >= price * 0.9
-      ? `✓ Intrinsic Value justifies the ${fmtD(price)} asking price`
-      : `${incomeValue >= price * 0.65 ? '~' : '✗'} Intrinsic Value supports ${ivRatio}% of asking price`;
+    const ivRatio    = Math.round(incomeValue / initialInvestment * 100);
+    const ivBadgeCls = incomeValue >= initialInvestment * 0.9 ? 'green' : incomeValue >= initialInvestment * 0.65 ? 'amber' : 'red';
+    const ivBadgeTxt = incomeValue >= initialInvestment
+      ? `✓ Equity Value exceeds your ${allCash ? 'purchase price' : 'initial investment'}`
+      : `${incomeValue >= initialInvestment * 0.65 ? '~' : '✗'} Equity Value is ${ivRatio}% of your ${allCash ? 'purchase price' : 'initial investment'}`;
     const npvClr = npv >= 0 ? '#16a34a' : '#dc2626';
+    const equityLbl = allCash
+      ? 'Equity Value (Income-Based) — value of the property based on rental income (no financing)'
+      : 'Equity Value (Income-Based) — value of your invested capital based on rental income after debt';
     incomeValHtml = `
     <div class="income-val-card">
-      <div class="income-val-lbl">Intrinsic Value (Income-Based) — what this property is worth based on rental income</div>
+      <div class="income-val-lbl">${equityLbl}</div>
       <div class="income-val-num">${fmtD(incomeValue)}</div>
       <div class="income-val-sub">
         C₁ ÷ (r − g) = ${fmtD(Math.round(c1))} ÷ (${fmtP(riskLevelPct)} − ${fmtP(growthPct)}) = ${fmtD(Math.round(incomeValue))}.
-        ${incomeValue >= price ? `Intrinsic Value <strong>exceeds</strong> the ${fmtD(price)} asking price.` : `The ${fmtD(price)} asking price is <strong>${fmtD(price - incomeValue)} above</strong> intrinsic value.`}
+        ${incomeValue >= initialInvestment
+          ? `Equity Value <strong>exceeds</strong> your ${fmtD(initialInvestment)} ${allCash ? 'purchase price' : 'initial investment'}.`
+          : `Your ${fmtD(initialInvestment)} ${allCash ? 'purchase price' : 'initial investment'} is <strong>${fmtD(initialInvestment - incomeValue)} above</strong> equity value.`}
       </div>
       <div class="income-val-sub" style="margin-top:8px;padding-top:8px;border-top:1px solid #ede9fe">
-        <strong>NPV = Intrinsic Value − Purchase Price</strong><br>
+        <strong>NPV = Equity Value − ${allCash ? 'Purchase Price' : 'Initial Investment'}</strong><br>
         <span style="font-size:15px;font-weight:700;color:${npvClr}">${fmtD(npv, true)}</span>
-        = ${fmtD(Math.round(incomeValue))} − ${fmtD(price)}
+        = ${fmtD(Math.round(incomeValue))} − ${fmtD(initialInvestment)}
       </div>
       <div class="income-val-badges">
         <span class="income-badge ${ivBadgeCls}">${ivBadgeTxt}</span>
@@ -1206,8 +1222,9 @@ function calculate() {
         <div class="assum-item"><div class="av">${fmtD(price)}</div><div class="al">Purchase price</div></div>
       </div>
       <div style="font-size:12px;color:#9ca3af;padding-top:8px;border-top:1px solid #f3f4f6;line-height:1.6;margin-top:8px">
-        <strong style="color:#6b7280">NPV (Income Value)</strong> = C₁ ÷ (r − g), where C₁ = Year 1 net cash flow. Gordon Growth Model — no finite horizon assumed.
-        <strong style="color:#6b7280">Cash-on-Cash</strong> = annual net income ÷ total invested.
+        <strong style="color:#6b7280">Equity Value</strong> = C₁ ÷ (r − g), where C₁ = Year 1 cash flow. Gordon Growth Model — no finite horizon assumed.
+        <strong style="color:#6b7280">NPV</strong> = Equity Value − ${allCash ? 'Purchase Price' : 'Initial Investment (down + closing costs)'}.
+        <strong style="color:#6b7280">Cash-on-Cash</strong> = annual net income ÷ capital deployed.
       </div>
     </div>`;
 
