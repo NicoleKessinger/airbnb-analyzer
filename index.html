@@ -941,7 +941,7 @@ function calculate() {
     : `<strong>Below break-even</strong> → property generates negative cash flow.<br>
        <span style="color:#6b7280">Investment value depends on long-term returns (NPV).</span>`;
   // Payback period — used in Investment Performance section only, never in operating CF display
-  const paybackYrs    = moNetCF > 0 ? (initialInvestment / annualCF).toFixed(1) : null;
+  const paybackYrs    = annualCF > 0 ? (initialInvestment / annualCF).toFixed(1) : null;
   const paybackHtml   = paybackYrs
     ? `<strong>${paybackYrs} years</strong>`
     : `<span style="color:#dc2626">N/A — cash flow is negative</span>`;
