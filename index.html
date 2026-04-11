@@ -937,9 +937,11 @@ function calculate() {
   const beMsg  = beOcc <= occPct
     ? `At <strong>${occPct}%</strong> occupancy you're <strong>${beGap}pp above</strong> break-even of <strong>${beOcc.toFixed(1)}%</strong>.`
     : `Your projected <strong>${occPct}%</strong> occupancy is <strong>${Math.abs(beGap)}pp short</strong> of the <strong>${beOcc.toFixed(1)}%</strong> break-even.`;
-  const paybackLine = annualCF > 0
-    ? `At ${fmtD(Math.abs(moNetCF))}/mo net, the ${fmtD(initialInvestment)} investment recovers in <strong>${(initialInvestment / annualCF).toFixed(1)} yrs</strong> from cash flow.`
-    : `Cash flow is negative — down payment is not recovering.`;
+  // Payback period — used in Investment Performance section only, never in operating CF display
+  const paybackYrs    = moNetCF > 0 ? (initialInvestment / annualCF).toFixed(1) : null;
+  const paybackHtml   = paybackYrs
+    ? `<strong>${paybackYrs} years</strong>`
+    : `<span style="color:#dc2626">N/A — cash flow is negative</span>`;
   const hoaRow = hoaMonthly > 0
     ? `<div class="cf-row"><span class="cfl">HOA fee</span><span class="cfv">−${fmtD(hoaMonthly)}</span></div>` : '';
   const maintenanceRow = maintenance > 0
@@ -1027,9 +1029,9 @@ function calculate() {
       </div>
     </div>`;
 
-  // ── RENDER: Monthly Cash Flow ─────────────────────────────────────────────
+  // ── RENDER: Operating Performance ────────────────────────────────────────
   document.getElementById('metricsBox').innerHTML = `
-    <div class="section-title">Monthly Cash Flow</div>
+    <div class="section-title">Operating Performance</div>
     <div class="card">
       <div class="cf-sub cf-sub-rev">Revenue</div>
       <div class="cf-row"><span class="cfl">Rental income (${nightsPerMonth} nights/mo @ ${fmtD(nightlyRate)}/night)</span><span class="cfv">${fmtD(moRentalRev)}</span></div>
@@ -1048,7 +1050,11 @@ function calculate() {
         <span class="cf-net-lbl">Net monthly cash flow</span>
         <span class="cf-net-val">${moNetCF>=0?'+':'−'}${fmtD(Math.abs(moNetCF))}</span>
       </div>
-      <div class="cf-be">${beMsg} ${paybackLine}</div>
+      <div class="cf-net" style="border-top:1px dashed #e5e7eb;margin-top:6px;padding-top:10px">
+        <span class="cf-net-lbl" style="font-size:13px">Annual cash flow</span>
+        <span class="cf-net-val" style="font-size:15px;color:${annualCF>=0?'#16a34a':'#dc2626'}">${annualCF>=0?'+':'−'}${fmtD(Math.abs(annualCF))}</span>
+      </div>
+      <div class="cf-be">${beMsg}</div>
     </div>`;
 
   // ── RENDER: Investment Analysis ───────────────────────────────────────────
@@ -1098,9 +1104,19 @@ function calculate() {
   }).join('');
 
   document.getElementById('sensitivityBox').innerHTML = `
-    <div class="section-title">Investment Analysis</div>
+    <div class="section-title">Investment Performance</div>
 
     ${incomeValHtml}
+
+    <div class="card" style="margin-bottom:1rem">
+      <div class="slabel">Payback Period</div>
+      <div style="font-size:22px;font-weight:700;margin:6px 0">${paybackHtml}</div>
+      <div style="font-size:12px;color:#6b7280;line-height:1.5">
+        ${paybackYrs
+          ? `At ${fmtD(Math.abs(moNetCF))}/mo net cash flow, the ${fmtD(initialInvestment)} initial investment (down payment + closing costs) recovers in ${paybackYrs} years.`
+          : `Initial investment cannot recover until cash flow turns positive.`}
+      </div>
+    </div>
 
     <div class="invest-summary ${vClass}">
       <div class="invest-summary-label">Plain-English Summary</div>
