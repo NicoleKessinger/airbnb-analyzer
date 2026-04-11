@@ -390,8 +390,7 @@
           <div class="form-group"><label>Override nightly rate ($)</label><input type="number" id="customRate" placeholder="Leave blank to use above" /></div>
           <div class="form-group"><label>Override occupancy (%)</label><input type="number" id="occ" placeholder="Leave blank to use above" /></div>
           <div class="form-group"><label>Avg stays per month</label><input type="number" id="stays" value="6" /></div>
-          <div class="form-group"><label>Investment horizon (years)</label><input type="number" id="horizon" value="10" /></div>
-          <!-- NEW: Risk level → discount rate (Section 4) -->
+          <!-- Risk level → discount rate -->
           <div class="form-group">
             <label class="has-tip" data-tip="Your minimum required return — reflects how risky this investment is vs. alternatives like index funds">Investment Risk Level</label>
             <select id="riskLevel">
@@ -412,23 +411,6 @@
           </div>
         </div>
 
-        <!-- NEW: Exit Sale toggle — default OFF (Section 1) -->
-        <div class="toggle-row">
-          <div class="toggle-label-wrap">
-            <div class="toggle-lbl">Include Exit Sale <span style="font-size:10px;font-weight:400;color:#9ca3af">· Advanced</span></div>
-            <div class="toggle-sub">Model IRR &amp; NPV including property sale proceeds at end of horizon</div>
-          </div>
-          <label class="toggle-switch">
-            <input type="checkbox" id="exitSaleToggle" onchange="toggleExitSale()">
-            <span class="toggle-slider"></span>
-          </label>
-        </div>
-        <!-- Exit sale options shown only when toggle is ON -->
-        <div class="exit-sale-opts" id="exitSaleOpts">
-          <div class="form-grid">
-            <div class="form-group"><label>Annual appreciation (%)</label><input type="number" id="appreciation" value="3" step="0.5" /></div>
-          </div>
-        </div>
       </div>
     </div>
     <div class="nav-btns">
@@ -887,18 +869,13 @@ function calculate() {
   const mgmtPct  = parseFloat(document.getElementById('mgmt').value) / 100 || 0.20;
   const cleanFee = parseFloat(document.getElementById('cleaning').value)   || 120;
   const staysPM  = parseFloat(document.getElementById('stays').value)      || 6;
-  const horizon  = parseInt(document.getElementById('horizon').value)      || 10;
-  // ── SECTION 4: Discount rate from Risk Level dropdown ────────────────────
+  // ── Discount rate from Risk Level dropdown ────────────────────────────────
   const riskLevelPct = parseFloat(document.getElementById('riskLevel')?.value) || 8;
   const discount     = riskLevelPct / 100;
 
-  // ── SECTION 5: Annual income growth rate ─────────────────────────────────
+  // ── Annual income growth rate ─────────────────────────────────────────────
   const growthPct = parseFloat(document.getElementById('growth')?.value) || 2;
   const g         = growthPct / 100;
-
-  // ── SECTION 1: Exit sale toggle — default OFF ─────────────────────────────
-  const exitSale = document.getElementById('exitSaleToggle')?.checked || false;
-  const apprecn  = parseFloat(document.getElementById('appreciation').value) / 100 || 0.03;
 
   // ── Market rate selection ─────────────────────────────────────────────────
   const rAmts = [marketRates.low, marketRates.mid, marketRates.high];
@@ -937,39 +914,9 @@ function calculate() {
     incomeValue = c1 / (discount - g);
   }
 
-  // ── SECTION 3: Cash flows including CF0 = -totalInvested at t=0 ──────────
-  // Mortgage principal is financed; only down payment is real cash out at t=0
-  let cashFlows;
-  if (exitSale) {
-    // Advanced mode: include terminal sale proceeds
-    const salePrice     = price * Math.pow(1 + apprecn, horizon);
-    const remainingLoan = principal * (1 - horizon / termYrs); // simplified linear approx
-    cashFlows = Array.from({length: horizon}, (_, y) =>
-      y === horizon - 1 ? annualCF + salePrice - Math.max(0, remainingLoan) : annualCF);
-  } else {
-    // Default: income only — no terminal value
-    cashFlows = Array.from({length: horizon}, () => annualCF);
-  }
-  const allCFs = [-totalInvested, ...cashFlows];
-  const npv    = -totalInvested + calcNPV(cashFlows, discount);
-  const irr    = calcIRR(allCFs) * 100;
-
-  // ── SECTION 7: Payback Period — cumulative sum approach ───────────────────
-  let cumCF = -totalInvested;
-  let simplePayback = null;
-  for (let y = 0; y < cashFlows.length; y++) {
-    const prevCum = cumCF;
-    cumCF += cashFlows[y];
-    if (prevCum < 0 && cumCF >= 0 && simplePayback === null) {
-      simplePayback = y + (Math.abs(prevCum) / cashFlows[y]); // fractional year
-    }
-  }
-
   // ── Additional metrics ────────────────────────────────────────────────────
   const cashOnCash = (annualCF / totalInvested) * 100;
   const dscr       = noi / annualMtg;
-  const paybackOk  = simplePayback !== null && simplePayback <= horizon;
-  const paybackPct = simplePayback ? Math.min(100, (simplePayback / horizon) * 100) : 0;
 
   // ── Year 1 amortization ───────────────────────────────────────────────────
   const r = mortRate / 100 / 12;
@@ -989,61 +936,26 @@ function calculate() {
   const beMsg  = beOcc <= occPct
     ? `At <strong>${occPct}%</strong> occupancy you're <strong>${beGap}pp above</strong> break-even of <strong>${beOcc.toFixed(1)}%</strong>.`
     : `Your projected <strong>${occPct}%</strong> occupancy is <strong>${Math.abs(beGap)}pp short</strong> of the <strong>${beOcc.toFixed(1)}%</strong> break-even.`;
-  const paybackLine = simplePayback
-    ? `Down payment of ${fmtD(totalInvested)} recovers in <strong>${simplePayback.toFixed(1)} yrs</strong>.`
+  const paybackLine = annualCF > 0
+    ? `At ${fmtD(Math.abs(moNetCF))}/mo net, the ${fmtD(totalInvested)} investment recovers in <strong>${(totalInvested / annualCF).toFixed(1)} yrs</strong> from cash flow.`
     : `Cash flow is negative — down payment is not recovering.`;
   const hoaRow = hoaMonthly > 0
     ? `<div class="cf-row"><span class="cfl">HOA fee</span><span class="cfv">−${fmtD(hoaMonthly)}</span></div>` : '';
   const maintenanceRow = maintenance > 0
     ? `<div class="cf-row"><span class="cfl">Maintenance fees (pool, lawn, etc.)</span><span class="cfv">−${fmtD(maintenance)}</span></div>` : '';
 
-  // ── SECTION 1: Verdict — income-first by default ──────────────────────────
+  // ── Verdict — income-value first ─────────────────────────────────────────
   let vClass, vTitle, vSub;
-  if (!exitSale) {
-    if (cashOnCash >= riskLevelPct && incomeValue && incomeValue >= price * 0.8) {
-      vClass='green'; vTitle='Strong income investment';
-      vSub=`${fmtP(cashOnCash)}/yr cash return exceeds your ${fmtP(riskLevelPct)} target. Income value ${incomeValue >= price ? 'meets' : 'approaches'} asking price.`;
-    } else if (cashOnCash >= riskLevelPct * 0.6 || (incomeValue && incomeValue >= price * 0.65)) {
-      vClass='amber'; vTitle='Marginal income investment';
-      vSub=`${fmtP(cashOnCash)}/yr cash return is below your ${fmtP(riskLevelPct)} target. Negotiate price or boost nightly rates.`;
-    } else {
-      vClass='red'; vTitle='Challenging investment';
-      vSub=`${fmtP(cashOnCash)}/yr cash return is well below your ${fmtP(riskLevelPct)} target. High risk of underperformance.`;
-    }
+  if (cashOnCash >= riskLevelPct && incomeValue && incomeValue >= price * 0.8) {
+    vClass='green'; vTitle='Strong income investment';
+    vSub=`${fmtP(cashOnCash)}/yr cash return exceeds your ${fmtP(riskLevelPct)} target. NPV (Income Value) ${incomeValue >= price ? 'meets' : 'approaches'} the asking price.`;
+  } else if (cashOnCash >= riskLevelPct * 0.6 || (incomeValue && incomeValue >= price * 0.65)) {
+    vClass='amber'; vTitle='Marginal income investment';
+    vSub=`${fmtP(cashOnCash)}/yr cash return is below your ${fmtP(riskLevelPct)} target. Negotiate price down or boost nightly rates.`;
   } else {
-    if      (irr >= 10) { vClass='green'; vTitle='Strong investment (with sale)';  vSub=`IRR of ${fmtP(irr)} beats most benchmarks.`; }
-    else if (irr >= 6)  { vClass='green'; vTitle='Solid deal (with sale)';         vSub=`IRR of ${fmtP(irr)} is competitive.`; }
-    else if (irr >= 3)  { vClass='amber'; vTitle='Marginal deal (with sale)';      vSub=`IRR of ${fmtP(irr)} is below the S&P 500.`; }
-    else                { vClass='red';   vTitle='Challenging investment (with sale)'; vSub=`IRR of ${fmtP(irr)} is too low.`; }
+    vClass='red'; vTitle='Challenging investment';
+    vSub=`${fmtP(cashOnCash)}/yr cash return is well below your ${fmtP(riskLevelPct)} target. Income does not justify the price.`;
   }
-
-  // ── Sensitivity quickIRR (respects exit sale toggle) ─────────────────────
-  function quickIRR(nr, oc) {
-    const gr = Math.round(365*oc)*nr;
-    const cf = gr + staysPM*12*cleanFee - annualMtg - propTax - insurance - gr*mgmtPct - utilities - supplies - annualHOA - annualMaint;
-    let flows;
-    if (exitSale) {
-      const sp = price * Math.pow(1 + apprecn, horizon);
-      flows = [-totalInvested, ...Array.from({length:horizon}, (_,y) => y===horizon-1 ? cf+sp-principal*(1-horizon/termYrs) : cf)];
-    } else {
-      flows = [-totalInvested, ...Array.from({length:horizon}, () => cf)];
-    }
-    return calcIRR(flows) * 100;
-  }
-
-  // ── Sensitivity scenarios ─────────────────────────────────────────────────
-  const sensCases = [
-    { label: `At $${Math.round(rAmts[2])}/night (optimistic)`,   rate: rAmts[2], occ: rOccs[2] },
-    { label: `At $${Math.round(nightlyRate)}/night (selected)`,   rate: nightlyRate, occ: occupancy },
-    { label: `At $${Math.round(rAmts[0])}/night (conservative)`, rate: rAmts[0], occ: rOccs[0] },
-    { label: 'At 50% occupancy',                                   rate: nightlyRate, occ: 0.50 },
-  ];
-  const sensRows = sensCases.map(c => {
-    const si  = quickIRR(c.rate, c.occ);
-    const cls = si >= riskLevelPct ? 'pill-green' : si >= riskLevelPct * 0.6 ? 'pill-amber' : 'pill-red';
-    const note = si>=10 ? 'beats most asset classes' : si>=6 ? 'above S&P average' : si>=3 ? 'marginal — below S&P' : 'cash flow negative';
-    return `<div class="sens-row"><span class="sens-label">${c.label}</span><span class="pill ${cls}">IRR ${fmtP(si)}</span><span class="sens-note">${note}</span></div>`;
-  }).join('');
 
   const icon = vClass==='green' ? '✓' : vClass==='amber' ? '!' : '✗';
   const dataLabel = marketDataLoaded ? `<span style="font-size:11px;color:#166534;font-weight:500"><span class="live-dot"></span>Rates from live market data</span>` : '';
@@ -1061,50 +973,30 @@ function calculate() {
   const netCls         = moNetCF >= 0 ? 'pos' : 'neg';
 
   // ── Per-metric colors ─────────────────────────────────────────────────────
-  const irrClr  = irr >= riskLevelPct ? '#16a34a' : irr >= riskLevelPct * 0.75 ? '#d97706' : '#dc2626';
-  const npvClr  = npv >= 0 ? '#16a34a' : '#dc2626';
   const cocClr  = cashOnCash >= riskLevelPct ? '#16a34a' : cashOnCash >= riskLevelPct * 0.5 ? '#d97706' : '#dc2626';
   const dscrClr = dscr >= 1.25 ? '#166534' : dscr >= 1.0 ? '#92400e' : '#991b1b';
   const dscrNote = dscr >= 1.25 ? '✓ Strong — preferred by lenders' : dscr >= 1.0 ? '~ Marginal — just covers debt' : '✗ Rent doesn\'t cover the mortgage';
-  const pbClr   = paybackOk ? (simplePayback <= horizon * 0.7 ? '#16a34a' : '#d97706') : '#dc2626';
 
   // ── Plain-English summary ─────────────────────────────────────────────────
   const incomeStr = moNetCF >= 0
     ? `generating <strong>${fmtD(moNetCF)}/month</strong> in net income`
     : `running at a <strong>${fmtD(Math.abs(moNetCF))}/month</strong> net loss`;
   let summaryText;
-  if (!exitSale) {
-    const diff = (cashOnCash - riskLevelPct).toFixed(1);
-    if (vClass === 'green') {
-      summaryText = `This is a <strong>strong income investment</strong>. You're putting ${fmtD(totalInvested)} down and ${incomeStr}. ` +
-        `The <strong>${fmtP(cashOnCash)}/yr cash-on-cash return</strong> exceeds your ${fmtP(riskLevelPct)} target by ${Math.abs(diff)}pp. ` +
-        (incomeValue ? `Based on rental income alone, this property is worth <strong>${fmtD(incomeValue)}</strong> — ` + (incomeValue >= price ? 'above' : 'approaching') + ` the ${fmtD(price)} asking price. ` : '') +
-        (paybackOk ? `Your full ${fmtD(totalInvested)} investment recovers in <strong>${simplePayback.toFixed(1)} years</strong> from cash flow alone.` : '');
-    } else if (vClass === 'amber') {
-      summaryText = `This deal is <strong>borderline</strong>. You're putting ${fmtD(totalInvested)} down and ${incomeStr}. ` +
-        `The <strong>${fmtP(cashOnCash)}/yr cash return</strong> is below your ${fmtP(riskLevelPct)} target. ` +
-        (incomeValue ? `Income value of <strong>${fmtD(incomeValue)}</strong> is below the ${fmtD(price)} asking price — income alone doesn't justify the price. ` : '') +
-        `Consider negotiating a lower purchase price or targeting higher nightly rates.`;
-    } else {
-      summaryText = `<strong>The numbers are challenging.</strong> The <strong>${fmtP(cashOnCash)}/yr cash return</strong> falls well short of your ${fmtP(riskLevelPct)} target. ` +
-        (moNetCF < 0 ? `This property runs at a <strong>${fmtD(Math.abs(moNetCF))}/month</strong> net loss. ` : '') +
-        (incomeValue ? `Income value of <strong>${fmtD(incomeValue)}</strong> is significantly below the ${fmtD(price)} asking price. ` : '') +
-        `To improve: negotiate a lower price, raise nightly rates, or find a higher-demand market.`;
-    }
+  const diff = (cashOnCash - riskLevelPct).toFixed(1);
+  if (vClass === 'green') {
+    summaryText = `This is a <strong>strong income investment</strong>. You're putting ${fmtD(totalInvested)} down and ${incomeStr}. ` +
+      `The <strong>${fmtP(cashOnCash)}/yr cash-on-cash return</strong> exceeds your ${fmtP(riskLevelPct)} target by ${Math.abs(diff)}pp. ` +
+      (incomeValue ? `NPV (Income Value) of <strong>${fmtD(incomeValue)}</strong> ` + (incomeValue >= price ? 'exceeds' : 'approaches') + ` the ${fmtD(price)} asking price.` : '');
+  } else if (vClass === 'amber') {
+    summaryText = `This deal is <strong>borderline</strong>. You're putting ${fmtD(totalInvested)} down and ${incomeStr}. ` +
+      `The <strong>${fmtP(cashOnCash)}/yr cash return</strong> is below your ${fmtP(riskLevelPct)} target. ` +
+      (incomeValue ? `NPV (Income Value) of <strong>${fmtD(incomeValue)}</strong> is below the ${fmtD(price)} asking price — income alone doesn't fully justify the price. ` : '') +
+      `Consider negotiating a lower purchase price or targeting higher nightly rates.`;
   } else {
-    const irrDiff = Math.abs(irr - riskLevelPct).toFixed(1);
-    if (vClass === 'green') {
-      summaryText = `This is a <strong>strong investment including the eventual sale</strong>. You're putting ${fmtD(totalInvested)} down and ${incomeStr}. ` +
-        `The <strong>${fmtP(irr)}/yr total return (IRR)</strong> beats your ${fmtP(riskLevelPct)} target by ${irrDiff}pp. ` +
-        (paybackOk ? `Cash flow alone recovers your full investment in <strong>${simplePayback.toFixed(1)} years</strong>.` : `The strong overall return is driven largely by property appreciation at exit.`);
-    } else if (vClass === 'amber') {
-      summaryText = `This deal is <strong>borderline even including the exit sale</strong>. You're putting ${fmtD(totalInvested)} down and ${incomeStr}. ` +
-        `The <strong>${fmtP(irr)}/yr total return</strong> is close to your ${fmtP(riskLevelPct)} target — consider negotiating the price.`;
-    } else {
-      summaryText = `<strong>Challenging even with exit sale.</strong> The <strong>${fmtP(irr)}/yr total return</strong> trails your ${fmtP(riskLevelPct)} target. ` +
-        (moNetCF < 0 ? `This property runs at a <strong>${fmtD(Math.abs(moNetCF))}/month</strong> net loss. ` : '') +
-        `To improve: negotiate a lower price, target higher nightly rates, or find a higher-demand market.`;
-    }
+    summaryText = `<strong>The numbers are challenging.</strong> The <strong>${fmtP(cashOnCash)}/yr cash return</strong> falls well short of your ${fmtP(riskLevelPct)} target. ` +
+      (moNetCF < 0 ? `This property runs at a <strong>${fmtD(Math.abs(moNetCF))}/month</strong> net loss. ` : '') +
+      (incomeValue ? `NPV (Income Value) of <strong>${fmtD(incomeValue)}</strong> is significantly below the ${fmtD(price)} asking price. ` : '') +
+      `To improve: negotiate a lower price, raise nightly rates, or find a higher-demand market.`;
   }
 
   // ── RENDER: Verdict ───────────────────────────────────────────────────────
@@ -1116,7 +1008,7 @@ function calculate() {
         <div class="verdict-sub">${vSub}</div>
         <div class="tags">
           <span class="tag ${cashOnCash>=riskLevelPct?'tag-green':cashOnCash>=0?'tag-amber':'tag-red'}">CoC ${fmtP(cashOnCash)}/yr</span>
-          ${exitSale ? `<span class="tag ${irr>=riskLevelPct?'tag-green':irr>=3?'tag-amber':'tag-red'}">IRR ${fmtP(irr)}</span>` : ''}
+          ${incomeValue ? `<span class="tag ${incomeValue>=price?'tag-green':incomeValue>=price*0.7?'tag-amber':'tag-red'}">NPV ${fmtD(incomeValue)}</span>` : ''}
           <span class="tag tag-amber">Cap rate ${fmtP(capRate)}</span>
           <span class="tag ${moNetCF>=0?'tag-green':'tag-red'}">${moNetCF>=0?'+':''}${fmtD(moNetCF)}/mo</span>
         </div>
@@ -1149,11 +1041,11 @@ function calculate() {
     </div>`;
 
   // ── RENDER: Investment Analysis ───────────────────────────────────────────
-  // SECTION 2: Income Value (Growing Perpetuity)
+  // NPV (Income Value) card — main valuation metric
   let incomeValHtml;
   if (incomeValueErr) {
     incomeValHtml = `<div class="income-val-card" style="background:#fef2f2;border-color:#fecaca">
-      <div class="income-val-lbl">Income Value</div>
+      <div class="income-val-lbl">NPV (Income Value)</div>
       <div style="font-size:13px;color:#991b1b">${incomeValueErr}</div>
     </div>`;
   } else {
@@ -1164,11 +1056,11 @@ function calculate() {
       : `${incomeValue >= price * 0.65 ? '~' : '✗'} Income supports ${ivRatio}% of asking price`;
     incomeValHtml = `
     <div class="income-val-card">
-      <div class="income-val-lbl">This property is worth (based on rental income alone)</div>
+      <div class="income-val-lbl">NPV (Income Value) — what this property is worth based on rental income</div>
       <div class="income-val-num">${fmtD(incomeValue)}</div>
       <div class="income-val-sub">
-        Formula: next year's income ÷ (${fmtP(riskLevelPct)} required return − ${fmtP(growthPct)} growth) = ${fmtD(Math.round(c1))} ÷ ${fmtP(riskLevelPct - growthPct)}.
-        ${incomeValue >= price ? `This <strong>exceeds</strong> the ${fmtD(price)} asking price — income-backed good value.` : `The ${fmtD(price)} asking price is ${fmtD(price - incomeValue)} above income-based value.`}
+        Formula: C₁ ÷ (r − g) = ${fmtD(Math.round(c1))} ÷ (${fmtP(riskLevelPct)} − ${fmtP(growthPct)}) = ${fmtD(Math.round(incomeValue))}.
+        ${incomeValue >= price ? `This <strong>exceeds</strong> the ${fmtD(price)} asking price — income-backed good value.` : `The ${fmtD(price)} asking price is <strong>${fmtD(price - incomeValue)} above</strong> income-based value.`}
       </div>
       <div class="income-val-badges">
         <span class="income-badge ${ivBadgeCls}">${ivBadgeTxt}</span>
@@ -1178,26 +1070,7 @@ function calculate() {
     </div>`;
   }
 
-  // SECTION 3: Cash Flow Timeline (CF0 = -down, CF1…N = annual income)
-  const timelineCFs  = [-totalInvested, ...cashFlows];
-  const maxAbsCF     = Math.max(...timelineCFs.map(Math.abs)) || 1;
-  const maxBarPx     = 52;
-  const showN        = Math.min(timelineCFs.length, 12);
-  const timelineCols = timelineCFs.slice(0, showN).map((cf, i) => {
-    const barH     = Math.max(4, Math.round((Math.abs(cf) / maxAbsCF) * maxBarPx));
-    const isPos    = cf >= 0;
-    const barClass = i === 0 ? 'neg' : (exitSale && i === showN - 1 ? 'exit-bar' : (isPos ? 'pos' : 'neg'));
-    const absK     = Math.abs(cf) >= 1000 ? (Math.abs(cf)/1000).toFixed(0)+'k' : Math.round(Math.abs(cf));
-    return `<div class="cft-col">
-      <div class="cft-yr">Yr ${i}</div>
-      <div style="height:${maxBarPx}px;width:28px;display:flex;align-items:${isPos?'flex-end':'flex-start'}">
-        <div class="cft-bar ${barClass}" style="height:${barH}px"></div>
-      </div>
-      <div class="cft-amt">${cf<0?'−':'+'}$${absK}</div>
-    </div>`;
-  }).join('');
-
-  // SECTION 6: r-g sensitivity table
+  // r-g sensitivity table (only sensitivity table shown)
   const rVals = [0.06, 0.08, 0.10, 0.12];
   const gVals = [0.02, 0.03, 0.04];
   const rgRows = rVals.map(rv => {
@@ -1213,27 +1086,6 @@ function calculate() {
     return `<tr${isSelR?' class="rg-highlight"':''}><td>r = ${fmtP(rv*100)}</td>${cells}</tr>`;
   }).join('');
 
-  // Exit-sale metrics shown only when toggle is ON
-  const exitMetricsHtml = exitSale ? `
-    <div class="invest-grid" style="margin-bottom:1rem">
-      <div class="metric">
-        <div class="ml">Total Annual Return (IRR)</div>
-        <div class="mv" style="color:${irrClr}">${fmtP(irr)}</div>
-        <div class="ms">Your annualized return including rent + eventual property sale</div>
-        <div class="mx" style="color:${irrClr}">${irr >= riskLevelPct ? `✓ Beats ${fmtP(riskLevelPct)} target` : `✗ Trails ${fmtP(riskLevelPct)} target`}</div>
-      </div>
-      <div class="metric">
-        <div class="ml">NPV · ${horizon}-yr with sale</div>
-        <div class="mv" style="font-size:17px;color:${npvClr}">${npv>=0?'+':''}${fmtD(npv)}</div>
-        <div class="ms">${npv>=0?'Extra wealth vs. putting money in an index fund':'Wealth lost vs. putting money in an index fund'}</div>
-        <div class="mx" style="color:${npvClr}">${npv>=0?`✓ Outperforms ${fmtP(riskLevelPct)} alternative`:`✗ Underperforms ${fmtP(riskLevelPct)} alternative`}</div>
-      </div>
-    </div>` : `
-    <div style="font-size:12px;color:#9ca3af;padding:10px 14px;background:#f9fafb;border-radius:8px;margin-bottom:1rem;border-left:3px solid #e5e7eb">
-      <strong style="color:#6b7280">IRR &amp; NPV not shown</strong> — these require an exit sale to be meaningful.
-      Toggle "Include Exit Sale" in Step 3 to add appreciation-driven return to the model.
-    </div>`;
-
   document.getElementById('sensitivityBox').innerHTML = `
     <div class="section-title">Investment Analysis</div>
 
@@ -1242,37 +1094,6 @@ function calculate() {
     <div class="invest-summary ${vClass}">
       <div class="invest-summary-label">Plain-English Summary</div>
       ${summaryText}
-    </div>
-
-    <div class="card" style="margin-bottom:1rem">
-      <div class="slabel">Cash Flow Timeline — your money in and out over time</div>
-      <p style="font-size:12px;color:#9ca3af;margin-bottom:6px;line-height:1.5">
-        <strong style="color:#6b7280">Year 0</strong> = down payment out of pocket ·
-        <strong style="color:#6b7280">Years 1–${horizon}</strong> = annual net rental income${exitSale ? ' · <strong style="color:#5b21b6">Last bar</strong> includes exit sale proceeds' : ''}
-      </p>
-      <div class="cft-wrap"><div class="cf-timeline">${timelineCols}</div></div>
-    </div>
-
-    <div class="card" style="margin-bottom:1rem">
-      <div class="slabel">Payback Period — how long to recover your ${fmtD(totalInvested)} investment from cash flow</div>
-      <div class="payback-bar" style="margin-top:10px">
-        <div class="payback-fill" style="width:${paybackPct.toFixed(1)}%;background:${paybackOk ? '#5b21b6' : '#e5e7eb'}"></div>
-      </div>
-      <div style="display:flex;justify-content:space-between;font-size:12px;margin:6px 0 10px">
-        <span style="color:#9ca3af">Year 0</span>
-        <span style="color:${pbClr};font-weight:600">
-          ${paybackOk ? `✓ Recovered at year ${simplePayback.toFixed(1)}` : annualCF > 0 ? `✗ ${simplePayback.toFixed(1)} yrs — exceeds ${horizon}-yr window` : '✗ Negative cash flow'}
-        </span>
-        <span style="color:#9ca3af">Year ${horizon}</span>
-      </div>
-      <div style="font-size:12px;color:#9ca3af;border-top:1px solid #f3f4f6;padding-top:8px;line-height:1.6">
-        ${paybackOk
-          ? `At <strong style="color:#374151">${fmtD(Math.abs(moNetCF))}/mo</strong> net cash flow, the full ${fmtD(totalInvested)} recovers in <strong style="color:#374151">${simplePayback.toFixed(1)} years</strong> from rental income alone.`
-          : annualCF > 0
-            ? `Cash flow is positive but recovery takes ${simplePayback.toFixed(1)} years — beyond the ${horizon}-yr window. Enable "Include Exit Sale" in Step 3 to model appreciation-driven return.`
-            : `Cash flow is negative. Enable "Include Exit Sale" in Step 3 to model appreciation-driven return.`
-        }
-      </div>
     </div>
 
     <div class="invest-grid">
@@ -1296,13 +1117,11 @@ function calculate() {
       </div>
     </div>
 
-    ${exitMetricsHtml}
-
     <div class="card" style="margin-bottom:1rem">
-      <div class="slabel">Income Value sensitivity — how r and g affect what this property is worth</div>
+      <div class="slabel">NPV (Income Value) sensitivity — how r and g affect valuation</div>
       <p style="font-size:12px;color:#9ca3af;margin-bottom:10px;line-height:1.5">
-        Smaller gap between r and g → higher income valuation. Larger gap → more conservative.
-        <strong style="color:#374151">Your selection is highlighted.</strong>
+        Smaller gap between discount rate (r) and growth (g) → higher NPV.
+        Larger gap → more conservative. <strong style="color:#374151">Your selection is highlighted.</strong>
       </p>
       <div class="rg-wrap">
         <table class="rg-table">
@@ -1311,29 +1130,23 @@ function calculate() {
         </table>
       </div>
       <p style="font-size:11px;color:#9ca3af;margin-top:8px;line-height:1.6">
-        ✓ Green = income value ≥ asking price &nbsp;·&nbsp; ~ Yellow = within 30% below &nbsp;·&nbsp; ✗ Red = significantly below asking price
+        ✓ Green = NPV ≥ asking price &nbsp;·&nbsp; ~ Yellow = within 30% below &nbsp;·&nbsp; ✗ Red = significantly below asking price
       </p>
-    </div>
-
-    <div class="card" style="margin-bottom:1rem">
-      <div class="slabel">Scenario sensitivity — annual return under different market conditions</div>
-      ${sensRows}
     </div>
 
     <div class="card" style="margin-bottom:1rem">
       <div class="slabel">Assumptions</div>
       <div class="assum-grid">
-        <div class="assum-item"><div class="av">${horizon} yrs</div><div class="al">Investment horizon</div></div>
         <div class="assum-item"><div class="av">${fmtP(riskLevelPct)}</div><div class="al">Required return (r)</div></div>
         <div class="assum-item"><div class="av">${fmtP(growthPct)}</div><div class="al">Income growth (g)</div></div>
+        <div class="assum-item"><div class="av">${fmtP(riskLevelPct - growthPct)}</div><div class="al">Spread (r − g)</div></div>
         <div class="assum-item"><div class="av">${Math.round(occupancy*100)}%</div><div class="al">Projected occupancy</div></div>
         <div class="assum-item"><div class="av">${fmtD(nightlyRate)}/night</div><div class="al">Avg nightly rate</div></div>
         <div class="assum-item"><div class="av">${fmtD(price)}</div><div class="al">Purchase price</div></div>
       </div>
       <div style="font-size:12px;color:#9ca3af;padding-top:8px;border-top:1px solid #f3f4f6;line-height:1.6;margin-top:8px">
-        <strong style="color:#6b7280">Income Value</strong> = (Year 1 cash flow) ÷ (r − g) — Gordon Growth Model.
+        <strong style="color:#6b7280">NPV (Income Value)</strong> = C₁ ÷ (r − g), where C₁ = Year 1 net cash flow. Gordon Growth Model — no finite horizon assumed.
         <strong style="color:#6b7280">Cash-on-Cash</strong> = annual net income ÷ total invested.
-        ${exitSale ? `<strong style="color:#6b7280">IRR</strong> = total annualized return including rent + sale at year ${horizon} at ${fmtP(apprecn*100)}/yr appreciation.` : '<strong style="color:#6b7280">Exit sale is OFF</strong> — toggle it in Step 3 to add appreciation-driven return.'}
       </div>
     </div>`;
 
