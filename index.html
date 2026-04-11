@@ -819,7 +819,11 @@ function selectRate(i) {
 
 // ── Math helpers ──────────────────────────────────────────────────────────────
 function fmt(n)  { return Math.round(n).toLocaleString(); }
-function fmtD(n) { return '$' + fmt(n); }
+function fmtD(n, signed = false) {
+  const abs = '$' + fmt(Math.abs(n));
+  if (!signed) return n < 0 ? '−' + abs : abs;
+  return (n >= 0 ? '+' : '−') + abs;
+}
 function fmtP(n) { return (Math.round(n * 10) / 10).toFixed(1) + '%'; }
 
 function calcMortgage(principal, annualRate, years) {
@@ -905,8 +909,9 @@ function calculate() {
   const annualCF      = totalRev - totalExp;
   const capRate       = (noi / price) * 100;
 
-  // ── SECTION 2: Income Value — Growing Perpetuity (Gordon Growth Model) ────
-  // Formula: Value = C1 / (r - g), where C1 = annualCF × (1+g)
+  // ── SECTION 2: Intrinsic Value + NPV ────────────────────────────────────
+  // Intrinsic Value = C1 / (r - g)  — what the income stream is worth in perpetuity
+  // NPV             = Intrinsic Value − Purchase Price  — true economic profit/loss
   const c1 = annualCF * (1 + g);
   let incomeValue = null, incomeValueErr = null;
   if (discount <= g) {
@@ -914,6 +919,7 @@ function calculate() {
   } else {
     incomeValue = c1 / (discount - g);
   }
+  const npv = incomeValue !== null ? incomeValue - price : null;
 
   // ── Additional metrics ────────────────────────────────────────────────────
   const cashOnCash = (annualCF / initialInvestment) * 100;
@@ -950,18 +956,18 @@ function calculate() {
   const maintenanceRow = maintenance > 0
     ? `<div class="cf-row"><span class="cfl">Maintenance fees (pool, lawn, etc.)</span><span class="cfv">−${fmtD(maintenance)}</span></div>` : '';
 
-  // ── Verdict — NPV is the sole decision driver ────────────────────────────
+  // ── Verdict — true NPV (intrinsic value − purchase price) is the sole driver
   // CoC and cap rate are display-only; they do not affect the verdict outcome.
   let vClass, vTitle, vSub;
-  if (incomeValue && incomeValue >= price) {
+  if (npv !== null && npv > 0) {
     vClass='green'; vTitle='Strong income investment';
-    vSub=`NPV (Income Value) of <strong>${fmtD(incomeValue)}</strong> meets or exceeds the ${fmtD(price)} asking price — the income stream fully justifies this investment.`;
-  } else if (incomeValue && incomeValue >= price * 0.7) {
+    vSub=`NPV <strong>${fmtD(npv, true)}</strong> — Intrinsic Value (<strong>${fmtD(incomeValue)}</strong>) exceeds the ${fmtD(price)} asking price. The income stream fully justifies this investment.`;
+  } else if (npv !== null && npv > -(price * 0.3)) {
     vClass='amber'; vTitle='Marginal income investment';
-    vSub=`NPV (Income Value) of <strong>${fmtD(incomeValue)}</strong> is below the ${fmtD(price)} asking price. Negotiate the price down or target higher nightly rates.`;
+    vSub=`NPV <strong>${fmtD(npv, true)}</strong> — Intrinsic Value (<strong>${fmtD(incomeValue)}</strong>) is below the ${fmtD(price)} asking price. Negotiate the price down or target higher nightly rates.`;
   } else {
     vClass='red'; vTitle='Challenging investment';
-    vSub=`NPV (Income Value) of <strong>${fmtD(incomeValue ? incomeValue : 0)}</strong> is well below the ${fmtD(price)} asking price. Income alone cannot justify this price.`;
+    vSub=`NPV <strong>${fmtD(npv !== null ? npv : -price, true)}</strong> — Intrinsic Value (<strong>${fmtD(incomeValue ?? 0)}</strong>) is well below the ${fmtD(price)} asking price. Income alone cannot justify this price.`;
   }
 
   const icon = vClass==='green' ? '✓' : vClass==='amber' ? '!' : '✗';
@@ -991,18 +997,19 @@ function calculate() {
   let summaryText;
   if (vClass === 'green') {
     summaryText = `This is a <strong>strong income investment</strong>. At your ${fmtP(riskLevelPct)} discount rate and ${fmtP(growthPct)} growth assumption, ` +
-      `the present value of all future rental income is <strong>${fmtD(incomeValue)}</strong> — ` +
-      (incomeValue >= price ? `exceeding` : `approaching`) + ` the ${fmtD(price)} asking price. ` +
+      `the Intrinsic Value of this property's income stream is <strong>${fmtD(incomeValue)}</strong> — exceeding the ${fmtD(price)} asking price. ` +
+      `NPV is <strong>${fmtD(npv, true)}</strong>, meaning income-based value exceeds what you pay. ` +
       `You're putting ${fmtD(initialInvestment)} in and ${incomeStr}. ` +
       `Cash-on-Cash return is <strong>${fmtP(cashOnCash)}/yr</strong> (display only); cap rate (property yield, before financing) is <strong>${fmtP(capRate)}</strong> (display only).`;
   } else if (vClass === 'amber') {
-    summaryText = `This deal is <strong>borderline</strong>. NPV (Income Value) of <strong>${fmtD(incomeValue)}</strong> covers ` +
+    summaryText = `This deal is <strong>borderline</strong>. Intrinsic Value of <strong>${fmtD(incomeValue)}</strong> covers ` +
       `${Math.round(incomeValue / price * 100)}% of the ${fmtD(price)} asking price — income alone doesn't fully justify the price. ` +
-      `You're putting ${fmtD(initialInvestment)} in and ${incomeStr}. ` +
+      `NPV is <strong>${fmtD(npv, true)}</strong>. You're putting ${fmtD(initialInvestment)} in and ${incomeStr}. ` +
       `Consider negotiating a lower purchase price or targeting higher nightly rates.`;
   } else {
-    summaryText = `<strong>The numbers are challenging.</strong> NPV (Income Value) of <strong>${fmtD(incomeValue ? incomeValue : 0)}</strong> ` +
-      `is significantly below the ${fmtD(price)} asking price — the income stream does not justify this investment at current rates. ` +
+    summaryText = `<strong>The numbers are challenging.</strong> Intrinsic Value of <strong>${fmtD(incomeValue ?? 0)}</strong> ` +
+      `is significantly below the ${fmtD(price)} asking price — NPV is <strong>${fmtD(npv !== null ? npv : -price, true)}</strong>. ` +
+      `The income stream does not justify this investment at current rates. ` +
       (moNetCF < 0 ? `This property also runs at a <strong>${fmtD(Math.abs(moNetCF))}/month</strong> net loss. ` : '') +
       `To improve: negotiate a lower price, raise nightly rates, or find a higher-demand market.`;
   }
@@ -1015,15 +1022,20 @@ function calculate() {
         <div class="verdict-title">${vTitle}</div>
         <div class="verdict-sub">${vSub}</div>
 
-        ${incomeValue ? `
+        ${incomeValue !== null ? `
         <div style="margin:10px 0 6px">
-          <span style="font-size:13px;font-weight:600;opacity:0.85">NPV (Income Value):</span>
-          <span style="font-size:20px;font-weight:700;margin-left:6px">${fmtD(incomeValue)}</span>
-          <div style="font-size:11px;opacity:0.7;margin-top:2px">This is the value today of future rental income</div>
+          <div style="font-size:12px;font-weight:600;opacity:0.75;margin-bottom:2px">Intrinsic Value (Income-Based)</div>
+          <div style="font-size:20px;font-weight:700">${fmtD(incomeValue)}</div>
+          <div style="font-size:11px;opacity:0.65;margin-top:1px">This is the value today of future rental income</div>
+          <div style="margin-top:8px;font-size:13px;font-weight:600">
+            NPV:
+            <span style="color:${npv>=0?'#16a34a':'#dc2626'};font-size:18px;font-weight:700;margin-left:4px">${fmtD(npv, true)}</span>
+            <span style="font-size:11px;font-weight:400;opacity:0.65;margin-left:6px">(Intrinsic Value − Purchase Price)</span>
+          </div>
         </div>` : ''}
 
         <div class="tags">
-          ${incomeValue ? `<span class="tag ${incomeValue>=price?'tag-green':incomeValue>=price*0.7?'tag-amber':'tag-red'}">NPV ${fmtD(incomeValue)}</span>` : ''}
+          ${npv !== null ? `<span class="tag ${npv>0?'tag-green':npv>-(price*0.3)?'tag-amber':'tag-red'}">NPV ${fmtD(npv, true)}</span>` : ''}
           <span class="tag tag-neutral">CoC ${fmtP(cashOnCash)}/yr</span>
           <span class="tag tag-neutral" title="Ignores financing and growth">Cap rate ${fmtP(capRate)}</span>
           <span class="tag ${moNetCF>=0?'tag-green':'tag-red'}">${moNetCF>=0?'+':''}${fmtD(moNetCF)}/mo</span>
@@ -1060,27 +1072,33 @@ function calculate() {
       <div class="cf-be">${beMsg}</div>
     </div>`;
 
-  // ── RENDER: Investment Analysis ───────────────────────────────────────────
-  // NPV (Income Value) card — main valuation metric
+  // ── RENDER: Investment Performance card ──────────────────────────────────
+  // Intrinsic Value = C1 / (r - g)  |  NPV = Intrinsic Value − Purchase Price
   let incomeValHtml;
   if (incomeValueErr) {
     incomeValHtml = `<div class="income-val-card" style="background:#fef2f2;border-color:#fecaca">
-      <div class="income-val-lbl">NPV (Income Value)</div>
+      <div class="income-val-lbl">Intrinsic Value (Income-Based)</div>
       <div style="font-size:13px;color:#991b1b">${incomeValueErr}</div>
     </div>`;
   } else {
     const ivRatio    = Math.round(incomeValue / price * 100);
     const ivBadgeCls = incomeValue >= price * 0.9 ? 'green' : incomeValue >= price * 0.65 ? 'amber' : 'red';
     const ivBadgeTxt = incomeValue >= price * 0.9
-      ? `✓ Justifies the ${fmtD(price)} asking price`
-      : `${incomeValue >= price * 0.65 ? '~' : '✗'} Income supports ${ivRatio}% of asking price`;
+      ? `✓ Intrinsic Value justifies the ${fmtD(price)} asking price`
+      : `${incomeValue >= price * 0.65 ? '~' : '✗'} Intrinsic Value supports ${ivRatio}% of asking price`;
+    const npvClr = npv >= 0 ? '#16a34a' : '#dc2626';
     incomeValHtml = `
     <div class="income-val-card">
-      <div class="income-val-lbl">NPV (Income Value) — what this property is worth based on rental income</div>
+      <div class="income-val-lbl">Intrinsic Value (Income-Based) — what this property is worth based on rental income</div>
       <div class="income-val-num">${fmtD(incomeValue)}</div>
       <div class="income-val-sub">
-        Formula: C₁ ÷ (r − g) = ${fmtD(Math.round(c1))} ÷ (${fmtP(riskLevelPct)} − ${fmtP(growthPct)}) = ${fmtD(Math.round(incomeValue))}.
-        ${incomeValue >= price ? `This <strong>exceeds</strong> the ${fmtD(price)} asking price — income-backed good value.` : `The ${fmtD(price)} asking price is <strong>${fmtD(price - incomeValue)} above</strong> income-based value.`}
+        C₁ ÷ (r − g) = ${fmtD(Math.round(c1))} ÷ (${fmtP(riskLevelPct)} − ${fmtP(growthPct)}) = ${fmtD(Math.round(incomeValue))}.
+        ${incomeValue >= price ? `Intrinsic Value <strong>exceeds</strong> the ${fmtD(price)} asking price.` : `The ${fmtD(price)} asking price is <strong>${fmtD(price - incomeValue)} above</strong> intrinsic value.`}
+      </div>
+      <div class="income-val-sub" style="margin-top:8px;padding-top:8px;border-top:1px solid #ede9fe">
+        <strong>NPV = Intrinsic Value − Purchase Price</strong><br>
+        <span style="font-size:15px;font-weight:700;color:${npvClr}">${fmtD(npv, true)}</span>
+        = ${fmtD(Math.round(incomeValue))} − ${fmtD(price)}
       </div>
       <div class="income-val-badges">
         <span class="income-badge ${ivBadgeCls}">${ivBadgeTxt}</span>
