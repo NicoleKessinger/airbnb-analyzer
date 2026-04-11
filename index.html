@@ -934,9 +934,12 @@ function calculate() {
     (fixedExpAnnual - cleaningRev) / (365 * nightlyRate * (1 - mgmtPct)) * 100));
   const occPct = Math.round(occupancy * 100);
   const beGap  = (occPct - beOcc).toFixed(1);
+  // Break-even is an operating signal only — never used in the final verdict.
   const beMsg  = beOcc <= occPct
-    ? `At <strong>${occPct}%</strong> occupancy you're <strong>${beGap}pp above</strong> break-even of <strong>${beOcc.toFixed(1)}%</strong>.`
-    : `Your projected <strong>${occPct}%</strong> occupancy is <strong>${Math.abs(beGap)}pp short</strong> of the <strong>${beOcc.toFixed(1)}%</strong> break-even.`;
+    ? `<strong>Above break-even</strong> → property generates positive cash flow.<br>
+       <span style="color:#6b7280">Investment value depends on long-term returns (NPV).</span>`
+    : `<strong>Below break-even</strong> → property generates negative cash flow.<br>
+       <span style="color:#6b7280">Investment value depends on long-term returns (NPV).</span>`;
   // Payback period — used in Investment Performance section only, never in operating CF display
   const paybackYrs    = moNetCF > 0 ? (initialInvestment / annualCF).toFixed(1) : null;
   const paybackHtml   = paybackYrs
