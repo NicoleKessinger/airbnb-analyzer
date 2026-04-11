@@ -96,6 +96,35 @@ export function generateCashFlowTimeline(initialInvestment, annualCashFlow, year
 }
 
 /**
+ * Calculates the simple payback period for an investment.
+ *
+ * Formula: years = initialInvestment / annualCashFlow
+ *
+ * @param {number} initialInvestment - Capital deployed at purchase ($). Use
+ *   {@link buildInitialInvestment}(downPayment, closingCosts) to construct this value.
+ * @param {number} annualCashFlow    - Annual net cash flow ($).
+ * @returns {number|string} Years to recover the investment (rounded to 1 decimal),
+ *   or the string "Not recovered" if annualCashFlow is zero or negative.
+ * @throws {Error} If initialInvestment <= 0.
+ *
+ * @example
+ * calculatePaybackPeriod(100_000,  12_000)  // → 8.3
+ * calculatePaybackPeriod(100_000,       0)  // → "Not recovered"
+ * calculatePaybackPeriod(100_000, -5_000)  // → "Not recovered"
+ */
+export function calculatePaybackPeriod(initialInvestment, annualCashFlow) {
+  if (initialInvestment <= 0) {
+    throw new Error(
+      `initialInvestment must be greater than zero (got ${initialInvestment}).`
+    );
+  }
+  if (annualCashFlow <= 0) {
+    return 'Not recovered';
+  }
+  return Math.round((initialInvestment / annualCashFlow) * 10) / 10;
+}
+
+/**
  * Calculates Cash-on-Cash (CoC) return.
  *
  * Formula: CoC = annualCashFlow / initialInvestment
