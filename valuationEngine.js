@@ -50,6 +50,52 @@ export function calculateNPVPerpetuity(C1, r, g, initialInvestment) {
 }
 
 /**
+ * Generates a cash flow timeline for an investment.
+ *
+ * Year 0 represents the initial capital outlay (negative).
+ * Years 1–N represent recurring annual operating cash flows.
+ * This timeline is intentionally separate from the monthly operating
+ * cash flow display — it models investment-level cash positions only.
+ *
+ * @param {number} initialInvestment - Capital deployed at purchase ($). Must be > 0.
+ *   Construct with {@link buildInitialInvestment}(downPayment, closingCosts).
+ * @param {number} annualCashFlow    - Recurring annual net cash flow ($). May be negative.
+ * @param {number} [years=10]        - Number of operating years to project (Year 1 … Year N).
+ * @returns {{ year: number, cashFlow: number }[]} Array of year/cashFlow pairs,
+ *   length = years + 1 (Year 0 included).
+ * @throws {Error} If initialInvestment <= 0 or years < 1.
+ *
+ * @example
+ * generateCashFlowTimeline(100_000, 12_000, 5)
+ * // [
+ * //   { year: 0, cashFlow: -100000 },
+ * //   { year: 1, cashFlow:   12000 },
+ * //   { year: 2, cashFlow:   12000 },
+ * //   { year: 3, cashFlow:   12000 },
+ * //   { year: 4, cashFlow:   12000 },
+ * //   { year: 5, cashFlow:   12000 },
+ * // ]
+ */
+export function generateCashFlowTimeline(initialInvestment, annualCashFlow, years = 10) {
+  if (initialInvestment <= 0) {
+    throw new Error(
+      `initialInvestment must be greater than zero (got ${initialInvestment}).`
+    );
+  }
+  if (!Number.isInteger(years) || years < 1) {
+    throw new Error(`years must be a positive integer (got ${years}).`);
+  }
+
+  const timeline = [{ year: 0, cashFlow: -initialInvestment }];
+
+  for (let y = 1; y <= years; y++) {
+    timeline.push({ year: y, cashFlow: annualCashFlow });
+  }
+
+  return timeline;
+}
+
+/**
  * Calculates Cash-on-Cash (CoC) return.
  *
  * Formula: CoC = annualCashFlow / initialInvestment
