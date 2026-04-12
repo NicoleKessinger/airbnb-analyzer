@@ -27,13 +27,16 @@ export function calculateAnnualCashFlow(monthlyCashFlow) {
 }
 
 /**
- * Calculates NPV on an equity basis using the Gordon Growth Model (growing perpetuity).
+ * Calculates NPV on an equity basis using a perpetuity model.
  *
- * Formula: NPV = C1 / (r - g) - initialInvestment
+ * Formula: NPV = C / (r - g) - initialInvestment
+ *
+ * C is the CURRENT annual cash flow — no (1+g) projection applied.
+ * This ensures C exactly matches the displayed annual cash flow with no discrepancy.
  *
  * Equity model:
- *   Financed purchase:  C1 = post-mortgage cash flow; initialInvestment = down + closing costs
- *   All-cash purchase:  C1 = unlevered cash flow;    initialInvestment = purchase price + closing costs
+ *   Financed purchase:  C = post-mortgage cash flow; initialInvestment = down + closing costs
+ *   All-cash purchase:  C = unlevered cash flow;    initialInvestment = purchase price + closing costs
  * Cash flows and initialInvestment MUST be on the same basis (both levered or both unlevered).
  *
  * @param {number} C1               - Next-period cash flow (year 1), already grown by g ($).

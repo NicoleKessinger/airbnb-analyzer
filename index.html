@@ -925,18 +925,19 @@ function calculate() {
   const capRate       = (noi / price) * 100;
 
   // ── SECTION 2: Equity Value + NPV (equity basis) ────────────────────────
-  // Equity Value = C1 / (r - g)
-  //   Financed:  PV of cash flows AFTER mortgage  → represents levered equity return
-  //   All-cash:  PV of cash flows BEFORE mortgage  → represents unlevered property value
+  // Equity Value = C / (r - g)   where C = current annual cash flow (no projection)
+  //   Financed:  C = post-mortgage cash flow  → levered equity return
+  //   All-cash:  C = unlevered cash flow       → property income value
   // NPV = Equity Value − initialInvestment
   //   Financed:  initialInvestment = downPayment + closingCosts
   //   All-cash:  initialInvestment = purchasePrice + closingCosts
-  const c1 = annualCF * (1 + g);
+  // V = C / (r - g)  — current annual cash flow divided by the spread.
+  // No (1+g) inflation: C is exactly the number shown on screen.
   let incomeValue = null, incomeValueErr = null;
   if (discount <= g) {
     incomeValueErr = `Growth rate (${fmtP(growthPct)}) must be less than discount rate (${fmtP(riskLevelPct)}).`;
   } else {
-    incomeValue = c1 / (discount - g);
+    incomeValue = annualCF / (discount - g);
   }
   const npv = incomeValue !== null ? incomeValue - initialInvestment : null;
 
@@ -1119,7 +1120,7 @@ function calculate() {
       <div class="income-val-lbl">${equityLbl}</div>
       <div class="income-val-num">${fmtD(incomeValue)}</div>
       <div class="income-val-sub">
-        C₁ ÷ (r − g) = ${fmtD(Math.round(c1))} ÷ (${fmtP(riskLevelPct)} − ${fmtP(growthPct)}) = ${fmtD(Math.round(incomeValue))}.
+        C ÷ (r − g) = ${fmtD(Math.round(annualCF))} ÷ (${fmtP(riskLevelPct)} − ${fmtP(growthPct)}) = ${fmtD(Math.round(incomeValue))}.
         ${incomeValue >= initialInvestment
           ? `Equity Value <strong>exceeds</strong> your ${fmtD(initialInvestment)} ${allCash ? 'purchase price' : 'initial investment'}.`
           : `Your ${fmtD(initialInvestment)} ${allCash ? 'purchase price' : 'initial investment'} is <strong>${fmtD(initialInvestment - incomeValue)} above</strong> equity value.`}
@@ -1146,7 +1147,7 @@ function calculate() {
       const isSelG = Math.abs(gv - g) < 0.005;
       const hl     = isSelR && isSelG;
       if (rv <= gv) return `<td class="rg-low"${hl?' style="font-weight:800"':''}>N/A</td>`;
-      const iv  = (annualCF * (1 + gv)) / (rv - gv);
+      const iv  = annualCF / (rv - gv);
       const cls = iv >= price ? 'rg-high' : iv >= price * 0.7 ? 'rg-mid' : 'rg-low';
       return `<td class="${cls}"${hl?' style="background:#faf5ff;font-weight:800"':''}>${fmtD(iv)}</td>`;
     }).join('');
