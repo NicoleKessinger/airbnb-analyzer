@@ -1138,18 +1138,19 @@ function calculate() {
     </div>`;
   }
 
-  // r-g sensitivity table (only sensitivity table shown)
+  // r-g sensitivity table — each cell shows NPV = C/(r-g) − initialInvestment
+  // Colours match verdict logic: green = NPV > 0, amber = NPV > -(initialInvestment × 0.3), red = below
   const rVals = [0.06, 0.08, 0.10, 0.12];
   const gVals = [0.02, 0.03, 0.04];
   const rgRows = rVals.map(rv => {
-    const isSelR = rv === discount;
+    const isSelR = Math.abs(rv - discount) < 0.005;
     const cells  = gVals.map(gv => {
       const isSelG = Math.abs(gv - g) < 0.005;
       const hl     = isSelR && isSelG;
       if (rv <= gv) return `<td class="rg-low"${hl?' style="font-weight:800"':''}>N/A</td>`;
-      const iv  = annualCF / (rv - gv);
-      const cls = iv >= price ? 'rg-high' : iv >= price * 0.7 ? 'rg-mid' : 'rg-low';
-      return `<td class="${cls}"${hl?' style="background:#faf5ff;font-weight:800"':''}>${fmtD(iv)}</td>`;
+      const cellNpv = annualCF / (rv - gv) - initialInvestment;
+      const cls = cellNpv > 0 ? 'rg-high' : cellNpv > -(initialInvestment * 0.3) ? 'rg-mid' : 'rg-low';
+      return `<td class="${cls}"${hl?' style="background:#faf5ff;font-weight:800"':''}>${fmtD(cellNpv, true)}</td>`;
     }).join('');
     return `<tr${isSelR?' class="rg-highlight"':''}><td>r = ${fmtP(rv*100)}</td>${cells}</tr>`;
   }).join('');
@@ -1196,19 +1197,19 @@ function calculate() {
     </div>
 
     <div class="card" style="margin-bottom:1rem">
-      <div class="slabel">NPV (Income Value) sensitivity — how r and g affect valuation</div>
+      <div class="slabel">NPV sensitivity — C ÷ (r − g) − ${allCash ? 'purchase price' : 'initial investment'}</div>
       <p style="font-size:12px;color:#9ca3af;margin-bottom:10px;line-height:1.5">
-        Smaller gap between discount rate (r) and growth (g) → higher NPV.
-        Larger gap → more conservative. <strong style="color:#374151">Your selection is highlighted.</strong>
+        Each cell = NPV at that r/g combination. Smaller spread (r − g) → higher equity value → better NPV.
+        <strong style="color:#374151">Your selection is highlighted.</strong>
       </p>
       <div class="rg-wrap">
         <table class="rg-table">
-          <thead><tr><th>Discount (r)</th><th>Growth 2%</th><th>Growth 3%</th><th>Growth 4%</th></tr></thead>
+          <thead><tr><th>Discount (r)</th><th>g = 2%</th><th>g = 3%</th><th>g = 4%</th></tr></thead>
           <tbody>${rgRows}</tbody>
         </table>
       </div>
       <p style="font-size:11px;color:#9ca3af;margin-top:8px;line-height:1.6">
-        ✓ Green = NPV ≥ asking price &nbsp;·&nbsp; ~ Yellow = within 30% below &nbsp;·&nbsp; ✗ Red = significantly below asking price
+        ✓ Green = NPV &gt; 0 &nbsp;·&nbsp; ~ Yellow = NPV &gt; −30% of ${allCash ? 'purchase price' : 'initial investment'} &nbsp;·&nbsp; ✗ Red = NPV below that threshold
       </p>
     </div>
 
