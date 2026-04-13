@@ -320,6 +320,46 @@
     border-left: 3px solid #fca5a5; display: none; }
   .validation-msg.visible { display: block; }
 
+  /* ── Field hint / helper text ────────────────────────────────────────────── */
+  .field-hint { font-size: 11px; color: #9ca3af; margin-top: 2px; line-height: 1.4; }
+  .field-badge { display: inline-block; font-size: 10px; font-weight: 600; padding: 2px 7px;
+    border-radius: 99px; background: #ede9fe; color: #5b21b6; margin-left: 5px;
+    text-transform: uppercase; letter-spacing: 0.04em; vertical-align: middle; }
+  .field-badge.estimated { background: #fef3c7; color: #92400e; }
+
+  /* ── Expense section grouping ────────────────────────────────────────────── */
+  .expense-group { margin-bottom: 1rem; }
+  .expense-group-label { font-size: 10px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.08em; color: #9ca3af; padding: 8px 0 6px;
+    border-bottom: 1px solid #f3f4f6; margin-bottom: 10px; }
+  .expense-preview { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 1rem; }
+  .expense-preview-item { background: #f9fafb; border: 1px solid #f0f0f0; border-radius: 8px;
+    padding: 10px 12px; }
+  .expense-preview-label { font-size: 11px; color: #9ca3af; margin-bottom: 2px; }
+  .expense-preview-value { font-size: 15px; font-weight: 600; color: #374151;
+    font-variant-numeric: tabular-nums; }
+  .expense-preview-note { font-size: 10px; color: #d97706; margin-top: 2px; }
+  .refine-toggle { display: flex; align-items: center; gap: 8px; width: 100%;
+    background: none; border: 1px dashed #d1d5db; border-radius: 8px; padding: 9px 14px;
+    font-size: 13px; font-weight: 500; color: #6b7280; cursor: pointer; margin: 0.75rem 0;
+    transition: all 0.15s; }
+  .refine-toggle:hover { border-color: #a78bfa; color: #5b21b6; background: #faf5ff; }
+  .refine-toggle .toggle-chevron { margin-left: auto; transition: transform 0.2s; font-size: 11px; }
+  .refine-toggle.open .toggle-chevron { transform: rotate(180deg); }
+  .refine-section { display: none; }
+  .refine-section.open { display: block; }
+
+  /* ── Revenue preview bar ─────────────────────────────────────────────────── */
+  .rev-preview { background: linear-gradient(135deg,#f5f3ff,#ede9fe); border: 1.5px solid #c4b5fd;
+    border-radius: 12px; padding: 14px 18px; margin-top: 14px; display: flex;
+    align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+  .rev-preview-label { font-size: 11px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.07em; color: #7c3aed; margin-bottom: 3px; }
+  .rev-preview-value { font-size: 26px; font-weight: 800; color: #4c1d95;
+    font-variant-numeric: tabular-nums; }
+  .rev-preview-sub { font-size: 11px; color: #7c3aed; margin-top: 2px; }
+  @media (max-width: 540px) { .expense-preview { grid-template-columns: 1fr; } }
+
   @media (max-width: 540px) {
     .form-grid { grid-template-columns: 1fr; }
     .metrics { grid-template-columns: 1fr 1fr; }
@@ -343,45 +383,60 @@
   <div class="steps">
     <div class="step active" id="st0" onclick="goTo(0)">1. Property</div>
     <div class="step" id="st1" onclick="goTo(1)">2. Financing</div>
-    <div class="step" id="st2" onclick="goTo(2)">3. Revenue</div>
-    <div class="step" id="st3" onclick="goTo(3)">4. Expenses</div>
+    <div class="step" id="st2" onclick="goTo(2)">3. Expenses</div>
+    <div class="step" id="st3" onclick="goTo(3)">4. Revenue</div>
     <div class="step" id="st4" onclick="goTo(4)">5. Results</div>
   </div>
 
-  <!-- ═══ PANEL 0: Step 1 — Property Basics ═══ -->
+  <!-- ═══ PANEL 0: Step 1 — Property ═══ -->
   <div class="panel active" id="p0">
     <div class="step-header">
       <div class="step-eyebrow">Step 1 of 5</div>
-      <div class="step-title">Property Basics</div>
-      <div class="step-desc">Let's start with the basics. Paste a listing URL to auto-fill details, or enter them manually below.</div>
+      <div class="step-title">Start with the property</div>
+      <div class="step-desc">Paste a Zillow or Realtor.com link to auto-fill details, or enter them manually below.</div>
     </div>
+
+    <!-- Section A: Listing URL auto-fill -->
     <div class="card">
-      <div class="card-title">Paste a listing URL or listing text</div>
-      <p class="input-guide">Paste a Zillow listing URL to analyze this property</p>
-      <p class="input-example">Example: https://www.zillow.com/homedetails/123-main-st-nashville-tn/12345678_zpid/</p>
+      <div class="card-title">Paste a Zillow or Realtor.com link <span style="font-weight:400;text-transform:none;font-size:12px;color:#9ca3af;">— or paste listing text directly</span></div>
       <div class="url-row">
         <input class="url-input" type="text" id="listingUrl"
-          placeholder="Paste a Zillow, Realtor.com, or Redfin URL — or paste the listing page text" />
+          placeholder="https://www.zillow.com/homedetails/… or paste listing text" />
         <button class="url-btn" id="analyzeBtn" onclick="analyzeListing()">
-          <span class="ai-badge">AI</span> Analyze listing
+          <span class="ai-badge">AI</span> Auto-fill details
         </button>
       </div>
       <p style="font-size:12px;color:#9ca3af;margin-top:6px;line-height:1.5;">
-        <strong style="color:#6b7280;">Tip:</strong> If the URL doesn't pull all details, open the listing in your browser,
-        press <kbd style="background:#f3f4f6;border:1px solid #e5e7eb;border-radius:3px;padding:1px 5px;font-size:11px;">Ctrl+A</kbd>
-        then <kbd style="background:#f3f4f6;border:1px solid #e5e7eb;border-radius:3px;padding:1px 5px;font-size:11px;">Ctrl+C</kbd>
-        to copy all text, and paste it here instead.
+        <strong style="color:#6b7280;">Tip:</strong> If the URL doesn't pull all details, open the listing, press
+        <kbd style="background:#f3f4f6;border:1px solid #e5e7eb;border-radius:3px;padding:1px 5px;font-size:11px;">Ctrl+A</kbd>
+        then <kbd style="background:#f3f4f6;border:1px solid #e5e7eb;border-radius:3px;padding:1px 5px;font-size:11px;">Ctrl+C</kbd>, and paste the text here.
       </p>
       <div class="status-box" id="listingStatus"></div>
       <div class="insight-box" id="listingInsight">
         <div class="insight-label">AI market context</div>
         <div id="insightText"></div>
       </div>
+    </div>
 
-      <div class="divider"><div class="divider-line"></div><div class="divider-text">property details — auto-filled or enter manually</div><div class="divider-line"></div></div>
-
+    <!-- Section B: Property Basics -->
+    <div class="card">
+      <div class="card-title">Property details</div>
       <div class="form-grid">
-        <div class="form-group"><label>Purchase price ($)</label><input type="number" id="price" value="" placeholder="e.g. 485000" /></div>
+        <div class="form-group">
+          <label>Purchase price ($) <span style="color:#dc2626">*</span></label>
+          <input type="number" id="price" value="" placeholder="e.g. 485000" oninput="onPriceChange()" />
+          <span class="field-hint">Required — all calculations derive from this</span>
+        </div>
+        <div class="form-group">
+          <label>Property type</label>
+          <select id="propertyType">
+            <option value="single_family">Single-family home</option>
+            <option value="condo" selected>Condo / townhouse</option>
+            <option value="multi_family">Multi-family (2–4 units)</option>
+            <option value="cabin">Cabin / vacation home</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
         <div class="form-group">
           <label>Bedrooms</label>
           <select id="beds">
@@ -392,10 +447,19 @@
             <option value="5">5+ bedrooms</option>
           </select>
         </div>
-        <div class="form-group"><label>City / Market</label><input type="text" id="city" value="" placeholder="e.g. Nashville, TN" /></div>
-        <div class="form-group"><label>Closing costs ($)</label><input type="number" id="closingCosts" value="" placeholder="e.g. 9700" /></div>
+        <div class="form-group">
+          <label>City / Market</label>
+          <input type="text" id="city" value="" placeholder="e.g. Nashville, TN" />
+          <span class="field-hint">Used to fetch live market rates in Step 4</span>
+        </div>
+        <div class="form-group">
+          <label>Closing costs ($)</label>
+          <input type="number" id="closingCosts" value="" placeholder="e.g. 9700 (≈2%)" />
+          <span class="field-hint">Title, origination fees, etc. — included in initial investment</span>
+        </div>
       </div>
     </div>
+
     <div class="validation-msg" id="val0">⚠ Please enter a purchase price before continuing.</div>
     <div class="nav-btns">
       <button class="nav-btn primary" onclick="nextStep(0)">Next: Financing →</button>
@@ -406,8 +470,8 @@
   <div class="panel" id="p1">
     <div class="step-header">
       <div class="step-eyebrow">Step 2 of 5</div>
-      <div class="step-title">Financing</div>
-      <div class="step-desc">How will you fund this purchase? Toggle all-cash or enter your mortgage details.</div>
+      <div class="step-title">How will you finance this property?</div>
+      <div class="step-desc">Enter your mortgage details below, or toggle all-cash if you're not financing.</div>
     </div>
     <div class="card">
       <div class="card-title" id="mortgageCardTitle">Financing details</div>
@@ -417,8 +481,25 @@
       </label>
       <div class="mortgage-fields" id="mortgageFields">
         <div class="form-grid">
-          <div class="form-group"><label>Down payment ($)</label><input type="number" id="down" value="" placeholder="e.g. 97000" /></div>
-          <div class="form-group"><label>Mortgage rate (%)</label><input type="number" id="rate" value="6.8" step="0.1" /></div>
+          <!-- Down Payment % + $ linked pair -->
+          <div class="form-group">
+            <label>Down payment (%)</label>
+            <input type="number" id="downPct" value="20" step="1" min="0" max="100"
+              oninput="syncDownFromPct()" placeholder="20" />
+            <span class="field-hint">Default assumes 20% down</span>
+          </div>
+          <div class="form-group">
+            <label>Down payment ($) <span class="field-badge">auto-calculated</span></label>
+            <input type="number" id="down" value="" placeholder="Auto-calculated from %" oninput="syncDownFromAmt()" />
+            <span class="field-hint">Editable — overrides % above</span>
+          </div>
+          <!-- Interest rate -->
+          <div class="form-group">
+            <label>Interest rate (%)</label>
+            <input type="number" id="rate" value="6.8" step="0.1" />
+            <span class="field-hint">Estimate based on current market rates (~6.5–7%)</span>
+          </div>
+          <!-- Loan term -->
           <div class="form-group">
             <label>Loan term</label>
             <select id="term">
@@ -426,23 +507,136 @@
               <option value="15">15-year fixed</option>
             </select>
           </div>
-          <div class="form-group"><label>Extra monthly payment ($)</label><input type="number" id="extra" value="0" /></div>
+          <!-- Extra payment -->
+          <div class="form-group">
+            <label>Extra monthly payment ($)</label>
+            <input type="number" id="extra" value="0" />
+            <span class="field-hint">Optional — reduces loan balance faster</span>
+          </div>
         </div>
       </div>
     </div>
     <div class="validation-msg" id="val1">⚠ Please enter a down payment amount (or select all-cash purchase).</div>
     <div class="nav-btns">
-      <button class="nav-btn" onclick="goTo(0)">← Back</button>
-      <button class="nav-btn primary" onclick="nextStep(1)">Next: Revenue →</button>
+      <button class="nav-btn" onclick="goTo(0)">← Back: Property</button>
+      <button class="nav-btn primary" onclick="nextStep(1)">Next: Expenses →</button>
     </div>
   </div>
 
-  <!-- ═══ PANEL 2: Step 3 — Revenue Assumptions ═══ -->
+  <!-- ═══ PANEL 2: Step 3 — Expenses ═══ -->
   <div class="panel" id="p2">
     <div class="step-header">
       <div class="step-eyebrow">Step 3 of 5</div>
-      <div class="step-title">Revenue Assumptions</div>
-      <div class="step-desc">Select a nightly rate scenario or enter your own. Adjust occupancy and return expectations.</div>
+      <div class="step-title">Estimate your monthly costs</div>
+      <div class="step-desc">We've pre-filled reasonable estimates for your market. Review and refine — or proceed as-is.</div>
+    </div>
+    <div class="card">
+      <!-- Quick Estimate Preview (always visible) -->
+      <div class="card-title">Cost estimates <span class="field-badge estimated">estimated — refine below</span></div>
+      <div class="expense-preview" id="expensePreview">
+        <!-- populated by updateExpensePreview() when entering this step -->
+        <div class="expense-preview-item">
+          <div class="expense-preview-label">Insurance</div>
+          <div class="expense-preview-value" id="prev-insurance">$200/mo</div>
+          <div class="expense-preview-note">Estimated</div>
+        </div>
+        <div class="expense-preview-item">
+          <div class="expense-preview-label">Property Tax</div>
+          <div class="expense-preview-value" id="prev-tax">—</div>
+          <div class="expense-preview-note">Estimated at 1.2% of price</div>
+        </div>
+        <div class="expense-preview-item">
+          <div class="expense-preview-label">HOA / Maintenance</div>
+          <div class="expense-preview-value" id="prev-hoa">$0/mo</div>
+          <div class="expense-preview-note">Assumed none — adjust below</div>
+        </div>
+        <div class="expense-preview-item">
+          <div class="expense-preview-label">Management + Cleaning</div>
+          <div class="expense-preview-value" id="prev-mgmt">20% + $120/stay</div>
+          <div class="expense-preview-note">Standard STR management</div>
+        </div>
+        <div class="expense-preview-item">
+          <div class="expense-preview-label">Utilities &amp; Supplies</div>
+          <div class="expense-preview-value">$450/mo</div>
+          <div class="expense-preview-note">Auto-included in analysis</div>
+        </div>
+      </div>
+
+      <!-- Refine toggle -->
+      <button class="refine-toggle" id="refineToggle" onclick="toggleRefine()">
+        ✎ Refine estimates (expand detailed inputs)
+        <span class="toggle-chevron">▾</span>
+      </button>
+
+      <!-- Detailed inputs: expandable -->
+      <div class="refine-section" id="refineSection">
+
+        <!-- Fixed Costs -->
+        <div class="expense-group">
+          <div class="expense-group-label">Fixed Costs</div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Annual insurance ($) <span class="field-badge estimated">estimated</span></label>
+              <input type="number" id="insurance" value="2400" oninput="updateExpensePreview()" />
+              <span class="field-hint">~0.5% of purchase price per year</span>
+            </div>
+            <div class="form-group">
+              <label>Annual property tax ($) <span class="field-badge estimated">estimated</span></label>
+              <input type="number" id="tax" value="" placeholder="Auto-estimated from price" oninput="updateExpensePreview()" />
+              <span class="field-hint">~1.2% of purchase price per year</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Variable Costs -->
+        <div class="expense-group">
+          <div class="expense-group-label">Variable Costs</div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Management fee (%)</label>
+              <input type="number" id="mgmt" value="20" step="1" oninput="updateExpensePreview()" />
+              <span class="field-hint">Standard STR management: 20–25%</span>
+            </div>
+            <div class="form-group">
+              <label>Cleaning fee per stay ($)</label>
+              <input type="number" id="cleaning" value="120" oninput="updateExpensePreview()" />
+              <span class="field-hint">Charged to guests; offsets your cleaning cost</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Optional -->
+        <div class="expense-group">
+          <div class="expense-group-label">Optional</div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Monthly HOA fee ($)</label>
+              <input type="number" id="hoa" value="0" placeholder="0 if none" oninput="updateExpensePreview()" />
+            </div>
+            <div class="form-group">
+              <label>Monthly maintenance ($)</label>
+              <input type="number" id="maintenance" value="200" placeholder="pool, lawn, etc." oninput="updateExpensePreview()" />
+              <span class="field-hint">Pool, lawn care, repairs — estimate $150–300/mo</span>
+            </div>
+          </div>
+        </div>
+
+        <p style="font-size:12px;color:#9ca3af;margin-top:4px;line-height:1.5;">Utilities (~$300/mo) and supplies (~$150/mo) are included automatically.</p>
+      </div>
+    </div>
+
+    <div class="nav-btns">
+      <button class="nav-btn" onclick="goTo(1)">← Back: Financing</button>
+      <button class="nav-btn primary" onclick="nextStep(2)">Next: Revenue →</button>
+    </div>
+  </div>
+
+  <!-- ═══ PANEL 3: Step 4 — Revenue ═══ -->
+  <div class="panel" id="p3">
+    <div class="step-header">
+      <div class="step-eyebrow">Step 4 of 5</div>
+      <div class="step-title">What can this property earn?</div>
+      <div class="step-desc">Select a nightly rate scenario or enter your own. We'll fetch live market data for your city.</div>
     </div>
     <div class="card">
       <div class="rate-section-header">
@@ -476,10 +670,20 @@
       <div style="margin-top:14px; padding-top:14px; border-top:1px solid #f3f4f6;">
         <div class="card-title" style="margin-bottom:8px;">Fine-tune assumptions</div>
         <div class="form-grid">
-          <div class="form-group"><label>Override nightly rate ($)</label><input type="number" id="customRate" placeholder="Leave blank to use above" /></div>
-          <div class="form-group"><label>Override occupancy (%)</label><input type="number" id="occ" placeholder="Leave blank to use above" /></div>
-          <div class="form-group"><label>Avg stays per month</label><input type="number" id="stays" value="6" /></div>
-          <!-- Risk level → discount rate -->
+          <div class="form-group">
+            <label>Override nightly rate ($)</label>
+            <input type="number" id="customRate" placeholder="Leave blank to use above" oninput="updateRevPreview()" />
+          </div>
+          <div class="form-group">
+            <label>Occupancy (%)</label>
+            <input type="number" id="occ" placeholder="Leave blank to use above" oninput="updateRevPreview()" />
+            <span class="field-hint">Typical Airbnb occupancy: 60–80%. Default: ~65–70%</span>
+          </div>
+          <div class="form-group">
+            <label>Avg stays per month</label>
+            <input type="number" id="stays" value="6" />
+            <span class="field-hint">Used to estimate cleaning revenue</span>
+          </div>
           <div class="form-group">
             <label class="has-tip" data-tip="Your minimum required return — reflects how risky this investment is vs. alternatives like index funds">Investment Risk Level</label>
             <select id="riskLevel">
@@ -489,7 +693,6 @@
               <option value="12">Very High Risk — speculative (12%)</option>
             </select>
           </div>
-          <!-- NEW: Growth rate (Section 5) -->
           <div class="form-group">
             <label class="has-tip" data-tip="Expected annual growth in perpetual rental income (perpetuity model)">Annual Income Growth</label>
             <select id="growth">
@@ -500,36 +703,25 @@
           </div>
         </div>
 
+        <!-- Live monthly revenue preview -->
+        <div class="rev-preview" id="revPreview">
+          <div>
+            <div class="rev-preview-label">Estimated Monthly Revenue</div>
+            <div class="rev-preview-value" id="revPreviewAmt">—</div>
+            <div class="rev-preview-sub" id="revPreviewSub">Select a rate scenario above</div>
+          </div>
+          <div style="text-align:right;">
+            <div class="rev-preview-label">Annual</div>
+            <div style="font-size:20px;font-weight:700;color:#4c1d95;font-variant-numeric:tabular-nums" id="revPreviewAnnual">—</div>
+          </div>
+        </div>
       </div>
     </div>
-    <div class="nav-btns">
-      <button class="nav-btn" onclick="goTo(1)">← Back</button>
-      <button class="nav-btn primary" onclick="goTo(3)">Next: Expenses →</button>
-    </div>
-  </div>
 
-  <!-- ═══ PANEL 3: Step 4 — Expenses ═══ -->
-  <div class="panel" id="p3">
-    <div class="step-header">
-      <div class="step-eyebrow">Step 4 of 5</div>
-      <div class="step-title">Expenses</div>
-      <div class="step-desc">Enter your recurring property costs. These are used to calculate your true net cash flow.</div>
-    </div>
-    <div class="card">
-      <div class="card-title">Annual &amp; monthly costs</div>
-      <div class="form-grid">
-        <div class="form-group"><label>Annual insurance ($)</label><input type="number" id="insurance" value="2400" /></div>
-        <div class="form-group"><label>Annual property tax ($)</label><input type="number" id="tax" value="" placeholder="e.g. 6000" /></div>
-        <div class="form-group"><label>Monthly HOA fee ($)</label><input type="number" id="hoa" value="0" placeholder="0 if none" /></div>
-        <div class="form-group"><label>Monthly maintenance fees ($)</label><input type="number" id="maintenance" value="0" placeholder="pool, lawn, etc." /></div>
-        <div class="form-group"><label>Management fee (%)</label><input type="number" id="mgmt" value="20" step="1" /></div>
-        <div class="form-group"><label>Cleaning fee per stay ($)</label><input type="number" id="cleaning" value="120" /></div>
-      </div>
-      <p style="font-size:12px;color:#9ca3af;margin-top:12px;line-height:1.5;">Utilities (~$300/mo) and supplies (~$150/mo) are included automatically in the analysis.</p>
-    </div>
+    <div class="validation-msg" id="val3">⚠ Please select or enter a nightly rate before viewing results.</div>
     <div class="nav-btns">
-      <button class="nav-btn" onclick="goTo(2)">← Back</button>
-      <button class="nav-btn primary" onclick="calculate()">Calculate Results →</button>
+      <button class="nav-btn" onclick="goTo(2)">← Back: Expenses</button>
+      <button class="nav-btn primary" onclick="nextStep(3)">Calculate Results →</button>
     </div>
   </div>
 
@@ -537,8 +729,8 @@
   <div class="panel" id="p4">
     <div class="step-header">
       <div class="step-eyebrow">Step 5 of 5</div>
-      <div class="step-title">Investment Analysis Results</div>
-      <div class="step-desc">Here's the full picture. Review your verdict, cash flow breakdown, and NPV analysis below.</div>
+      <div class="step-title">Here's your investment analysis</div>
+      <div class="step-desc">Your verdict is based on NPV — the income-based equity value vs. your capital invested.</div>
     </div>
     <div id="verdictBox"></div>
     <div id="detailsWrapper" class="details-content">
@@ -547,7 +739,7 @@
       <div id="amortBox"></div>
     </div>
     <div class="nav-btns">
-      <button class="nav-btn" onclick="goTo(3)">← Back to Expenses</button>
+      <button class="nav-btn" onclick="goTo(3)">← Back to Revenue</button>
       <button class="nav-btn primary" onclick="reset()">Analyze another property</button>
     </div>
   </div>
@@ -605,64 +797,84 @@ function goTo(n) {
     if (i < n) s.classList.add('done');
     else if (i === n) s.classList.add('active');
   });
-  // Scroll to top of app on each step change
+  // Step-specific on-enter actions
+  if (n === 1) {
+    // Entering Financing: seed down payment from price if not yet set
+    syncDownFromPct();
+  }
+  if (n === 2) {
+    // Entering Expenses: populate defaults from price, refresh preview
+    updateExpenseDefaults();
+    updateExpensePreview();
+  }
+  if (n === 3) {
+    // Entering Revenue: refresh revenue preview
+    updateRevPreview();
+  }
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 // ── Wizard step validation ────────────────────────────────────────────────────
 // validateStep(n): returns true if the current step's required fields are filled.
-// Shows a friendly error message inline if not.
+// Shows a friendly inline error if not.
 function validateStep(n) {
   const showErr = (id) => {
     const el = document.getElementById(id);
     if (el) { el.classList.add('visible'); setTimeout(() => el.classList.remove('visible'), 4000); }
   };
+  const flashError = (id) => {
+    const el = document.getElementById(id);
+    if (el) { el.classList.add('field-error'); setTimeout(() => el.classList.remove('field-error'), 3000); }
+  };
 
   if (n === 0) {
     const price = parseFloat(document.getElementById('price').value);
-    if (!price || price <= 0) {
-      document.getElementById('price').classList.add('field-error');
-      setTimeout(() => document.getElementById('price').classList.remove('field-error'), 3000);
-      showErr('val0');
-      return false;
-    }
+    if (!price || price <= 0) { flashError('price'); showErr('val0'); return false; }
   }
 
   if (n === 1) {
     const allCash = document.getElementById('allCash').checked;
     if (!allCash) {
       const down = parseFloat(document.getElementById('down').value);
-      if (!down || down <= 0) {
-        document.getElementById('down').classList.add('field-error');
-        setTimeout(() => document.getElementById('down').classList.remove('field-error'), 3000);
-        showErr('val1');
-        return false;
-      }
+      if (!down || down <= 0) { flashError('down'); showErr('val1'); return false; }
     }
   }
 
-  return true; // Steps 2–4 have sensible defaults; no hard validation needed
+  if (n === 3) {
+    // Revenue step: ensure a nightly rate exists (either card or manual)
+    const customRate = parseFloat(document.getElementById('customRate').value);
+    const rAmts = [marketRates.low, marketRates.mid, marketRates.high];
+    const effectiveRate = customRate || rAmts[selectedRate];
+    if (!effectiveRate || effectiveRate <= 0) { showErr('val3'); return false; }
+  }
+
+  return true; // Steps 2 and any unlisted steps have sensible defaults
 }
 
 // ── nextStep(n): validate then advance to step n+1 ───────────────────────────
+// Step flow: 0 (Property) → 1 (Financing) → 2 (Expenses) → 3 (Revenue) → 4 (Results)
 function nextStep(n) {
   if (!validateStep(n)) return;
-  if (n === 1) {
-    // Step 2 → Step 3: also trigger market rate fetch
+  if (n === 2) {
+    // Expenses → Revenue: navigate AND trigger live market rate fetch
     goToRates();
+  } else if (n === 3) {
+    // Revenue → Results: run full calculation
+    calculate();
   } else {
     goTo(n + 1);
   }
 }
 
 function goToRates() {
-  // Navigate to Step 3 (Revenue) and fetch market rates if not yet loaded
-  goTo(2);
+  // Navigate to Step 4 (Revenue, panel 3) and fetch market rates if not yet loaded
+  goTo(3);
   const city = document.getElementById('city').value.trim();
   const beds = document.getElementById('beds').value;
-  if (city && !marketDataLoaded) fetchMarketRates(city, beds);
-  else if (!city) {
-    setStatus('rateStatus', 'error', 'Enter a city on the previous step to get live market rates.');
+  if (city && !marketDataLoaded) {
+    fetchMarketRates(city, beds);
+  } else if (!city) {
+    setStatus('rateStatus', 'error', 'Enter a city in Step 1 to get live market rates.');
   }
 }
 
@@ -674,9 +886,119 @@ function toggleDetails() {
   if (btn) { btn.classList.toggle('open', open); }
 }
 
+// ── Expenses refine-toggle ────────────────────────────────────────────────────
+function toggleRefine() {
+  const sec = document.getElementById('refineSection');
+  const btn = document.getElementById('refineToggle');
+  if (!sec) return;
+  const open = sec.classList.toggle('open');
+  if (btn) { btn.classList.toggle('open', open); }
+}
+
+// ── Down payment % ↔ $ sync ───────────────────────────────────────────────────
+function syncDownFromPct() {
+  const price = parseFloat(document.getElementById('price').value) || 0;
+  const pct   = parseFloat(document.getElementById('downPct').value);
+  if (price > 0 && !isNaN(pct)) {
+    document.getElementById('down').value = Math.round(price * pct / 100);
+  }
+}
+
+function syncDownFromAmt() {
+  const price = parseFloat(document.getElementById('price').value) || 0;
+  const amt   = parseFloat(document.getElementById('down').value)  || 0;
+  if (price > 0) {
+    document.getElementById('downPct').value = Math.round(amt / price * 1000) / 10;
+  }
+}
+
+// ── Called when price changes: re-sync down $ and expense defaults ────────────
+function onPriceChange() {
+  syncDownFromPct();
+  updateExpenseDefaults();
+  updateExpensePreview();
+}
+
+// ── Populate expense defaults from price (called when entering Step 3) ────────
+function updateExpenseDefaults() {
+  const price = parseFloat(document.getElementById('price').value) || 0;
+  if (price <= 0) return;
+
+  // Property tax: estimate 1.2% of price annually if field is empty
+  const taxEl = document.getElementById('tax');
+  if (!taxEl.value || taxEl.dataset.autoFilled === 'true') {
+    taxEl.value = Math.round(price * 0.012);
+    taxEl.dataset.autoFilled = 'true';
+    taxEl.classList.add('ai-filled');
+  }
+
+  // Insurance: estimate 0.5% of price annually if still at default or empty
+  const insEl = document.getElementById('insurance');
+  const insDefault = Math.round(price * 0.005);
+  if (!insEl.value || insEl.dataset.autoFilled === 'true') {
+    insEl.value = Math.max(1200, insDefault);
+    insEl.dataset.autoFilled = 'true';
+  }
+}
+
+// ── Update the quick-preview tiles on the Expenses step ──────────────────────
+function updateExpensePreview() {
+  const price       = parseFloat(document.getElementById('price').value)       || 0;
+  const insurance   = parseFloat(document.getElementById('insurance').value)   || 2400;
+  const tax         = parseFloat(document.getElementById('tax').value)         || Math.round(price * 0.012);
+  const hoa         = parseFloat(document.getElementById('hoa').value)         || 0;
+  const maintenance = parseFloat(document.getElementById('maintenance').value) || 200;
+  const mgmt        = parseFloat(document.getElementById('mgmt').value)        || 20;
+  const cleaning    = parseFloat(document.getElementById('cleaning').value)    || 120;
+
+  const prevIns  = document.getElementById('prev-insurance');
+  const prevTax  = document.getElementById('prev-tax');
+  const prevHoa  = document.getElementById('prev-hoa');
+  const prevMgmt = document.getElementById('prev-mgmt');
+
+  if (prevIns)  prevIns.textContent  = '$' + Math.round(insurance / 12).toLocaleString() + '/mo';
+  if (prevTax)  prevTax.textContent  = '$' + Math.round(tax / 12).toLocaleString() + '/mo';
+  if (prevHoa)  prevHoa.textContent  = '$' + (hoa + maintenance).toLocaleString() + '/mo';
+  if (prevMgmt) prevMgmt.textContent = mgmt + '% + $' + cleaning + '/stay';
+}
+
+// ── Live monthly revenue preview on the Revenue step ─────────────────────────
+function updateRevPreview() {
+  const customRate = parseFloat(document.getElementById('customRate').value);
+  const customOcc  = parseFloat(document.getElementById('occ').value);
+  const rAmts      = [marketRates.low, marketRates.mid, marketRates.high];
+  const rOccs      = [marketRates.lowOcc, marketRates.midOcc, marketRates.highOcc];
+  const nightlyRate = customRate || rAmts[selectedRate];
+  const occupancy   = customOcc ? customOcc / 100 : rOccs[selectedRate];
+  const staysPM     = parseFloat(document.getElementById('stays').value) || 6;
+  const cleaning    = parseFloat(document.getElementById('cleaning').value) || 120;
+
+  if (!nightlyRate || nightlyRate <= 0) return;
+
+  const nightsPerMonth = Math.round(365 * occupancy / 12);
+  const moRentalRev    = nightsPerMonth * nightlyRate;
+  const moCleanRev     = staysPM * cleaning;
+  const moTotal        = moRentalRev + moCleanRev;
+
+  const amtEl  = document.getElementById('revPreviewAmt');
+  const subEl  = document.getElementById('revPreviewSub');
+  const annEl  = document.getElementById('revPreviewAnnual');
+  if (amtEl)  amtEl.textContent  = '$' + Math.round(moTotal).toLocaleString();
+  if (subEl)  subEl.textContent  = `${nightsPerMonth} nights/mo × $${Math.round(nightlyRate)} + $${Math.round(moCleanRev)} cleaning`;
+  if (annEl)  annEl.textContent  = '$' + Math.round(moTotal * 12).toLocaleString() + '/yr';
+}
+
 function reset() {
   marketDataLoaded = false;
   selectedRate = 1;
+  // Clear auto-filled flags so defaults recalculate for new property
+  ['tax','insurance'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { delete el.dataset.autoFilled; el.classList.remove('ai-filled'); }
+  });
+  // Reset down payment % to default
+  document.getElementById('downPct').value = '20';
+  document.getElementById('down').value = '';
   goTo(0);
 }
 
@@ -965,6 +1287,7 @@ Based on your knowledge of the short-term rental market in ${city}, return ONLY 
     });
 
     ['rc0','rc1','rc2'].forEach(id => document.getElementById(id).classList.remove('loading-card'));
+    updateRevPreview();
 
     if (d.market_notes) {
       setStatus('rateStatus', 'success', `Market notes: ${d.market_notes}`);
@@ -986,12 +1309,14 @@ Based on your knowledge of the short-term rental market in ${city}, return ONLY 
       document.getElementById(id).textContent = ['55%','68%','78%'][i] + ' occupancy';
     });
     ['rc0','rc1','rc2'].forEach(id => document.getElementById(id).classList.remove('loading-card'));
+    updateRevPreview();
   }
 }
 
 function selectRate(i) {
   selectedRate = i;
   document.querySelectorAll('.rate-card').forEach((c, j) => c.classList.toggle('selected', i === j));
+  updateRevPreview();
 }
 
 // ── Math helpers ──────────────────────────────────────────────────────────────
