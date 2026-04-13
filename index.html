@@ -253,6 +253,20 @@
   .panel.active { display: block; }
   .slabel { font-size: 14px; font-weight: 600; color: #374151; margin-bottom: 10px; }
 
+  /* ── Wizard step description ─────────────────────────────────────────────── */
+  .step-header { margin-bottom: 1.25rem; }
+  .step-eyebrow { font-size: 11px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.08em; color: #7c3aed; margin-bottom: 4px; }
+  .step-title { font-size: 20px; font-weight: 700; color: #1c1c1c; margin-bottom: 4px; }
+  .step-desc { font-size: 13px; color: #6b7280; line-height: 1.5; }
+
+  /* ── Validation error ────────────────────────────────────────────────────── */
+  .field-error { border-color: #fca5a5 !important; background: #fff5f5 !important; }
+  .validation-msg { font-size: 12px; color: #dc2626; margin-top: 6px;
+    padding: 8px 12px; background: #fef2f2; border-radius: 6px;
+    border-left: 3px solid #fca5a5; display: none; }
+  .validation-msg.visible { display: block; }
+
   @media (max-width: 540px) {
     .form-grid { grid-template-columns: 1fr; }
     .metrics { grid-template-columns: 1fr 1fr; }
@@ -272,19 +286,24 @@
     <button class="api-save-btn" onclick="saveKey()">Save</button>
   </div>
 
-  <!-- Steps -->
+  <!-- ── Wizard step indicator (5 steps) ──────────────────────────────────── -->
   <div class="steps">
     <div class="step active" id="st0" onclick="goTo(0)">1. Property</div>
     <div class="step" id="st1" onclick="goTo(1)">2. Financing</div>
-    <div class="step" id="st2" onclick="goTo(2)">3. Market rates</div>
-    <div class="step" id="st3" onclick="goTo(3)">4. Verdict</div>
+    <div class="step" id="st2" onclick="goTo(2)">3. Revenue</div>
+    <div class="step" id="st3" onclick="goTo(3)">4. Expenses</div>
+    <div class="step" id="st4" onclick="goTo(4)">5. Results</div>
   </div>
 
-  <!-- ═══ PANEL 0: Property ═══ -->
+  <!-- ═══ PANEL 0: Step 1 — Property Basics ═══ -->
   <div class="panel active" id="p0">
+    <div class="step-header">
+      <div class="step-eyebrow">Step 1 of 5</div>
+      <div class="step-title">Property Basics</div>
+      <div class="step-desc">Let's start with the basics. Paste a listing URL to auto-fill details, or enter them manually below.</div>
+    </div>
     <div class="card">
       <div class="card-title">Paste a listing URL or listing text</div>
-      <!-- NEW: Empty state guidance -->
       <p class="input-guide">Paste a Zillow listing URL to analyze this property</p>
       <p class="input-example">Example: https://www.zillow.com/homedetails/123-main-st-nashville-tn/12345678_zpid/</p>
       <div class="url-row">
@@ -322,16 +341,21 @@
         </div>
         <div class="form-group"><label>City / Market</label><input type="text" id="city" value="" placeholder="e.g. Nashville, TN" /></div>
         <div class="form-group"><label>Closing costs ($)</label><input type="number" id="closingCosts" value="" placeholder="e.g. 9700" /></div>
-        <div class="form-group"><label>Annual property tax ($)</label><input type="number" id="tax" value="" placeholder="e.g. 6000" /></div>
       </div>
     </div>
+    <div class="validation-msg" id="val0">⚠ Please enter a purchase price before continuing.</div>
     <div class="nav-btns">
-      <button class="nav-btn primary" onclick="goTo(1)">Next: Financing →</button>
+      <button class="nav-btn primary" onclick="nextStep(0)">Next: Financing →</button>
     </div>
   </div>
 
-  <!-- ═══ PANEL 1: Financing ═══ -->
+  <!-- ═══ PANEL 1: Step 2 — Financing ═══ -->
   <div class="panel" id="p1">
+    <div class="step-header">
+      <div class="step-eyebrow">Step 2 of 5</div>
+      <div class="step-title">Financing</div>
+      <div class="step-desc">How will you fund this purchase? Toggle all-cash or enter your mortgage details.</div>
+    </div>
     <div class="card">
       <div class="card-title" id="mortgageCardTitle">Financing details</div>
       <label class="all-cash-toggle">
@@ -352,22 +376,21 @@
           <div class="form-group"><label>Extra monthly payment ($)</label><input type="number" id="extra" value="0" /></div>
         </div>
       </div>
-      <div class="form-grid" style="margin-top:12px">
-        <div class="form-group"><label>Annual insurance ($)</label><input type="number" id="insurance" value="2400" /></div>
-        <div class="form-group"><label>Monthly HOA fee ($)</label><input type="number" id="hoa" value="0" placeholder="0 if none" /></div>
-        <div class="form-group"><label>Monthly maintenance fees ($)</label><input type="number" id="maintenance" value="0" placeholder="pool, lawn, etc." /></div>
-        <div class="form-group"><label>Management fee (%)</label><input type="number" id="mgmt" value="20" step="1" /></div>
-        <div class="form-group"><label>Cleaning fee per stay ($)</label><input type="number" id="cleaning" value="120" /></div>
-      </div>
     </div>
+    <div class="validation-msg" id="val1">⚠ Please enter a down payment amount (or select all-cash purchase).</div>
     <div class="nav-btns">
       <button class="nav-btn" onclick="goTo(0)">← Back</button>
-      <button class="nav-btn primary" onclick="goToRates()">Next: Market rates →</button>
+      <button class="nav-btn primary" onclick="nextStep(1)">Next: Revenue →</button>
     </div>
   </div>
 
-  <!-- ═══ PANEL 2: Market rates ═══ -->
+  <!-- ═══ PANEL 2: Step 3 — Revenue Assumptions ═══ -->
   <div class="panel" id="p2">
+    <div class="step-header">
+      <div class="step-eyebrow">Step 3 of 5</div>
+      <div class="step-title">Revenue Assumptions</div>
+      <div class="step-desc">Select a nightly rate scenario or enter your own. Adjust occupancy and return expectations.</div>
+    </div>
     <div class="card">
       <div class="rate-section-header">
         <div class="card-title" style="margin:0" id="rateTitle">Estimated nightly rate</div>
@@ -428,20 +451,48 @@
     </div>
     <div class="nav-btns">
       <button class="nav-btn" onclick="goTo(1)">← Back</button>
-      <button class="nav-btn primary" onclick="calculate()">Calculate verdict →</button>
+      <button class="nav-btn primary" onclick="goTo(3)">Next: Expenses →</button>
     </div>
   </div>
 
-  <!-- ═══ PANEL 3: Verdict ═══ -->
+  <!-- ═══ PANEL 3: Step 4 — Expenses ═══ -->
   <div class="panel" id="p3">
-    <!-- NEW: Results Section Header -->
-    <h2 class="results-heading">Investment Analysis Results</h2>
+    <div class="step-header">
+      <div class="step-eyebrow">Step 4 of 5</div>
+      <div class="step-title">Expenses</div>
+      <div class="step-desc">Enter your recurring property costs. These are used to calculate your true net cash flow.</div>
+    </div>
+    <div class="card">
+      <div class="card-title">Annual &amp; monthly costs</div>
+      <div class="form-grid">
+        <div class="form-group"><label>Annual insurance ($)</label><input type="number" id="insurance" value="2400" /></div>
+        <div class="form-group"><label>Annual property tax ($)</label><input type="number" id="tax" value="" placeholder="e.g. 6000" /></div>
+        <div class="form-group"><label>Monthly HOA fee ($)</label><input type="number" id="hoa" value="0" placeholder="0 if none" /></div>
+        <div class="form-group"><label>Monthly maintenance fees ($)</label><input type="number" id="maintenance" value="0" placeholder="pool, lawn, etc." /></div>
+        <div class="form-group"><label>Management fee (%)</label><input type="number" id="mgmt" value="20" step="1" /></div>
+        <div class="form-group"><label>Cleaning fee per stay ($)</label><input type="number" id="cleaning" value="120" /></div>
+      </div>
+      <p style="font-size:12px;color:#9ca3af;margin-top:12px;line-height:1.5;">Utilities (~$300/mo) and supplies (~$150/mo) are included automatically in the analysis.</p>
+    </div>
+    <div class="nav-btns">
+      <button class="nav-btn" onclick="goTo(2)">← Back</button>
+      <button class="nav-btn primary" onclick="calculate()">Calculate Results →</button>
+    </div>
+  </div>
+
+  <!-- ═══ PANEL 4: Step 5 — Results ═══ -->
+  <div class="panel" id="p4">
+    <div class="step-header">
+      <div class="step-eyebrow">Step 5 of 5</div>
+      <div class="step-title">Investment Analysis Results</div>
+      <div class="step-desc">Here's the full picture. Review your verdict, cash flow breakdown, and NPV analysis below.</div>
+    </div>
     <div id="verdictBox"></div>
     <div id="metricsBox"></div>
     <div id="sensitivityBox"></div>
     <div id="amortBox"></div>
     <div class="nav-btns">
-      <button class="nav-btn" onclick="goTo(2)">← Back</button>
+      <button class="nav-btn" onclick="goTo(3)">← Back to Expenses</button>
       <button class="nav-btn primary" onclick="reset()">Analyze another property</button>
     </div>
   </div>
@@ -490,6 +541,8 @@ function updateBanner() {
 if (apiKey) updateBanner();
 
 // ── Navigation ────────────────────────────────────────────────────────────────
+// goTo(n): shows panel n, marks steps as done/active/pending.
+// Panels 0–4 match steps 0–4 (5-step wizard).
 function goTo(n) {
   document.querySelectorAll('.panel').forEach((p, i) => p.classList.toggle('active', i === n));
   document.querySelectorAll('.step').forEach((s, i) => {
@@ -497,9 +550,58 @@ function goTo(n) {
     if (i < n) s.classList.add('done');
     else if (i === n) s.classList.add('active');
   });
+  // Scroll to top of app on each step change
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ── Wizard step validation ────────────────────────────────────────────────────
+// validateStep(n): returns true if the current step's required fields are filled.
+// Shows a friendly error message inline if not.
+function validateStep(n) {
+  const showErr = (id) => {
+    const el = document.getElementById(id);
+    if (el) { el.classList.add('visible'); setTimeout(() => el.classList.remove('visible'), 4000); }
+  };
+
+  if (n === 0) {
+    const price = parseFloat(document.getElementById('price').value);
+    if (!price || price <= 0) {
+      document.getElementById('price').classList.add('field-error');
+      setTimeout(() => document.getElementById('price').classList.remove('field-error'), 3000);
+      showErr('val0');
+      return false;
+    }
+  }
+
+  if (n === 1) {
+    const allCash = document.getElementById('allCash').checked;
+    if (!allCash) {
+      const down = parseFloat(document.getElementById('down').value);
+      if (!down || down <= 0) {
+        document.getElementById('down').classList.add('field-error');
+        setTimeout(() => document.getElementById('down').classList.remove('field-error'), 3000);
+        showErr('val1');
+        return false;
+      }
+    }
+  }
+
+  return true; // Steps 2–4 have sensible defaults; no hard validation needed
+}
+
+// ── nextStep(n): validate then advance to step n+1 ───────────────────────────
+function nextStep(n) {
+  if (!validateStep(n)) return;
+  if (n === 1) {
+    // Step 2 → Step 3: also trigger market rate fetch
+    goToRates();
+  } else {
+    goTo(n + 1);
+  }
 }
 
 function goToRates() {
+  // Navigate to Step 3 (Revenue) and fetch market rates if not yet loaded
   goTo(2);
   const city = document.getElementById('city').value.trim();
   const beds = document.getElementById('beds').value;
@@ -1258,7 +1360,7 @@ function calculate() {
       </div>`;
   }
 
-  goTo(3);
+  goTo(4);
 }
 
 // ── All-cash toggle ───────────────────────────────────────────────────────────
