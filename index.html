@@ -109,7 +109,53 @@
   .nav-btn.primary { background: #5b21b6; color: #fff; border-color: #5b21b6; }
   .nav-btn.primary:hover { background: #4c1d95; }
 
-  /* Verdict */
+  /* ── Hero verdict banner ─────────────────────────────────────────────────── */
+  .hero-verdict { border-radius: 16px; padding: 1.75rem 2rem; margin-bottom: 1.25rem; }
+  .hero-verdict.green { background: linear-gradient(135deg,#f0fdf4,#dcfce7); border: 1.5px solid #86efac; }
+  .hero-verdict.amber { background: linear-gradient(135deg,#fffbeb,#fef3c7); border: 1.5px solid #fcd34d; }
+  .hero-verdict.red   { background: linear-gradient(135deg,#fef2f2,#fee2e2); border: 1.5px solid #fca5a5; }
+
+  /* Badge row */
+  .hero-badge { display: inline-flex; align-items: center; gap: 8px; padding: 6px 14px; border-radius: 99px; font-size: 13px; font-weight: 700; margin-bottom: 10px; }
+  .hero-badge.green { background: #16a34a; color: #fff; }
+  .hero-badge.amber { background: #d97706; color: #fff; }
+  .hero-badge.red   { background: #dc2626; color: #fff; }
+  .hero-badge-icon  { font-size: 16px; }
+
+  /* Verdict headline */
+  .hero-headline { font-size: 22px; font-weight: 800; margin: 0 0 4px; line-height: 1.2; }
+  .hero-verdict.green .hero-headline { color: #14532d; }
+  .hero-verdict.amber .hero-headline { color: #78350f; }
+  .hero-verdict.red   .hero-headline { color: #7f1d1d; }
+  .hero-tagline { font-size: 13px; color: #6b7280; margin-bottom: 1.25rem; line-height: 1.5; }
+
+  /* Hero metrics row */
+  .hero-metrics { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+  .hero-metric { background: rgba(255,255,255,0.7); border-radius: 12px; padding: 14px 16px;
+    border: 1px solid rgba(0,0,0,0.07); }
+  .hero-metric.primary { grid-column: 1 / -1; background: rgba(255,255,255,0.85); }
+  .hero-metric-label { font-size: 10px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.08em; color: #9ca3af; margin-bottom: 4px; }
+  .hero-metric-value { font-size: 28px; font-weight: 800; font-variant-numeric: tabular-nums;
+    line-height: 1.1; }
+  .hero-metric.primary .hero-metric-value { font-size: 38px; }
+  .hero-metric-value.pos { color: #16a34a; }
+  .hero-metric-value.neg { color: #dc2626; }
+  .hero-metric-value.neutral { color: #374151; }
+  .hero-metric-sub { font-size: 11px; color: #9ca3af; margin-top: 3px; line-height: 1.4; }
+  .hero-divider { border: none; border-top: 1px solid rgba(0,0,0,0.08); margin: 1.25rem 0; }
+
+  /* Collapsible details */
+  .details-toggle { display: flex; align-items: center; gap: 8px; width: 100%; background: none;
+    border: 1px solid #e5e7eb; border-radius: 10px; padding: 10px 16px; font-size: 13px;
+    font-weight: 600; color: #374151; cursor: pointer; margin-bottom: 1rem; transition: background 0.15s; }
+  .details-toggle:hover { background: #f9fafb; }
+  .details-toggle .toggle-chevron { margin-left: auto; transition: transform 0.2s; font-size: 11px; }
+  .details-toggle.open .toggle-chevron { transform: rotate(180deg); }
+  .details-content { display: none; }
+  .details-content.open { display: block; }
+
+  /* Legacy .verdict kept for tag colours only — banner replaced by .hero-verdict */
   .verdict { border-radius: 12px; padding: 1.25rem 1.5rem; display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem; }
   .verdict.green { background: #f0fdf4; border: 1px solid #bbf7d0; }
   .verdict.amber { background: #fffbeb; border: 1px solid #fde68a; }
@@ -124,6 +170,13 @@
   .verdict.red   .verdict-title { color: #991b1b; }
   .verdict-sub { font-size: 13px; margin-top: 3px; color: #6b7280; }
   .tags { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 6px; }
+
+  @media (max-width: 540px) {
+    .hero-metrics { grid-template-columns: 1fr 1fr; }
+    .hero-metric.primary { grid-column: 1 / -1; }
+    .hero-metric-value { font-size: 22px; }
+    .hero-metric.primary .hero-metric-value { font-size: 30px; }
+  }
   .tag { font-size: 12px; font-weight: 500; padding: 3px 10px; border-radius: 99px; }
   .tag-green   { background: #dcfce7; color: #166534; }
   .tag-amber   { background: #fef3c7; color: #92400e; }
@@ -488,9 +541,11 @@
       <div class="step-desc">Here's the full picture. Review your verdict, cash flow breakdown, and NPV analysis below.</div>
     </div>
     <div id="verdictBox"></div>
-    <div id="metricsBox"></div>
-    <div id="sensitivityBox"></div>
-    <div id="amortBox"></div>
+    <div id="detailsWrapper" class="details-content">
+      <div id="metricsBox"></div>
+      <div id="sensitivityBox"></div>
+      <div id="amortBox"></div>
+    </div>
     <div class="nav-btns">
       <button class="nav-btn" onclick="goTo(3)">← Back to Expenses</button>
       <button class="nav-btn primary" onclick="reset()">Analyze another property</button>
@@ -609,6 +664,14 @@ function goToRates() {
   else if (!city) {
     setStatus('rateStatus', 'error', 'Enter a city on the previous step to get live market rates.');
   }
+}
+
+function toggleDetails() {
+  const dw  = document.getElementById('detailsWrapper');
+  const btn = document.getElementById('detailsToggleBtn');
+  if (!dw) return;
+  const open = dw.classList.toggle('open');
+  if (btn) { btn.classList.toggle('open', open); }
 }
 
 function reset() {
@@ -1137,39 +1200,56 @@ function calculate() {
       `To improve: negotiate a lower price, raise nightly rates, or find a higher-demand market.`;
   }
 
-  // ── RENDER: Verdict ───────────────────────────────────────────────────────
+  // ── RENDER: Hero Verdict Banner ───────────────────────────────────────────
+  const npvValClass = npv !== null ? (npv >= 0 ? 'pos' : 'neg') : 'neutral';
+  const cocValClass = cashOnCash >= riskLevelPct ? 'pos' : cashOnCash >= 0 ? 'neutral' : 'neg';
+  const cfValClass  = moNetCF >= 0 ? 'pos' : 'neg';
+
   document.getElementById('verdictBox').innerHTML = `
-    <div class="verdict ${vClass}">
-      <div class="verdict-icon"><span style="color:#fff;font-size:22px;font-weight:700">${icon}</span></div>
-      <div style="flex:1">
-        <div class="verdict-title">${vTitle}</div>
-        <div class="verdict-sub">${vSub}</div>
-
-        ${incomeValue !== null ? `
-        <div style="margin:10px 0 6px">
-          <div style="font-size:12px;font-weight:600;opacity:0.75;margin-bottom:2px">Equity Value (Income-Based)</div>
-          <div style="font-size:20px;font-weight:700">${fmtD(incomeValue)}</div>
-          <div style="font-size:11px;opacity:0.65;margin-top:1px">
-            ${allCash
-              ? 'Value of the property based on rental income (no financing)'
-              : 'Value of your invested capital based on rental income after debt'}
-          </div>
-          <div style="margin-top:8px;font-size:13px;font-weight:600">
-            NPV:
-            <span style="color:${npv>=0?'#16a34a':'#dc2626'};font-size:18px;font-weight:700;margin-left:4px">${fmtD(npv, true)}</span>
-            <span style="font-size:11px;font-weight:400;opacity:0.65;margin-left:6px">(Equity Value − ${allCash ? 'Purchase Price' : 'Initial Investment'})</span>
-          </div>
-        </div>` : ''}
-
-        <div class="tags">
-          ${npv !== null ? `<span class="tag ${npv>0?'tag-green':npv>-(initialInvestment*0.3)?'tag-amber':'tag-red'}">NPV ${fmtD(npv, true)}</span>` : ''}
-          <span class="tag tag-neutral">CoC ${fmtP(cashOnCash)}/yr</span>
-          <span class="tag tag-neutral" title="Ignores financing and growth">Cap rate ${fmtP(capRate)}</span>
-          <span class="tag ${moNetCF>=0?'tag-green':'tag-red'}">${moNetCF>=0?'+':''}${fmtD(moNetCF)}/mo</span>
-        </div>
-        <div style="margin-top:8px">${dataLabel}</div>
+    <div class="hero-verdict ${vClass}">
+      <div class="hero-badge ${vClass}">
+        <span class="hero-badge-icon">${icon}</span>
+        ${vTitle}
       </div>
+      <div class="hero-headline">${vSub}</div>
+      <div class="hero-tagline">${investLabel} · ${dataLabel}</div>
+
+      <div class="hero-metrics">
+        <div class="hero-metric primary">
+          <div class="hero-metric-label">Net Present Value (NPV)</div>
+          <div class="hero-metric-value ${npvValClass}">
+            ${npv !== null ? fmtD(npv, true) : 'N/A'}
+          </div>
+          <div class="hero-metric-sub">
+            Equity Value ${npv !== null ? fmtD(Math.round(incomeValue)) : '—'} &minus;
+            ${allCash ? 'Purchase Price' : 'Initial Investment'} ${fmtD(initialInvestment)}
+            &nbsp;·&nbsp; C&nbsp;÷&nbsp;(r&minus;g)&nbsp;=&nbsp;${fmtD(Math.round(annualCF))}&nbsp;÷&nbsp;(${fmtP(riskLevelPct)}&minus;${fmtP(growthPct)})
+          </div>
+        </div>
+        <div class="hero-metric">
+          <div class="hero-metric-label">Monthly Cash Flow</div>
+          <div class="hero-metric-value ${cfValClass}">${moNetCF >= 0 ? '+' : ''}${fmtD(moNetCF)}</div>
+          <div class="hero-metric-sub">After all expenses${allCash ? '' : ' &amp; mortgage'}</div>
+        </div>
+        <div class="hero-metric">
+          <div class="hero-metric-label">Cash-on-Cash Return</div>
+          <div class="hero-metric-value ${cocValClass}">${fmtP(cashOnCash)}/yr</div>
+          <div class="hero-metric-sub">Target: ${fmtP(riskLevelPct)}</div>
+        </div>
+      </div>
+
+      <hr class="hero-divider">
+      <button class="details-toggle" id="detailsToggleBtn" onclick="toggleDetails()">
+        <span>📊 View Full Breakdown</span>
+        <span class="toggle-chevron">▾</span>
+      </button>
     </div>`;
+
+  // Open details automatically after every calculation
+  const dw  = document.getElementById('detailsWrapper');
+  const btn = document.getElementById('detailsToggleBtn');
+  if (dw)  { dw.classList.add('open'); }
+  if (btn) { btn.classList.add('open'); }
 
   // ── RENDER: Operating Performance ────────────────────────────────────────
   document.getElementById('metricsBox').innerHTML = `
