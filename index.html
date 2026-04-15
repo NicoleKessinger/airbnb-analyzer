@@ -1012,7 +1012,7 @@
         <div class="gl-formula-eq">Utilities = $300/month = $3,600/year</div>
         <div class="gl-formula-eq" style="margin-top:4px">Supplies  = $150/month = $1,800/year</div>
       </div>
-      <div class="gl-app-note"><strong>In this app:</strong> hardcoded as <code>utilities = 3600</code> and <code>supplies = 1800</code> annually. These appear in the operating breakdown and are included in both Total Expenses and NOI.</div>
+      <div class="gl-app-note"><strong>In this app:</strong> editable monthly inputs (defaults: utilities = $300/mo, supplies = $150/mo), annualized as <code>utilities = moUtilities × 12</code> and <code>supplies = moSupplies × 12</code>. Both are included in Total Expenses and NOI.</div>
     </div>
   </div>
 
@@ -1451,6 +1451,16 @@
           <input type="number" id="maintenance" value="200" placeholder="e.g. 200" />
           <span class="field-hint">Pool, lawn, HVAC, minor repairs — est. $150–300/mo</span>
         </div>
+        <div class="form-group">
+          <label>Utilities ($/mo) <span class="field-badge estimated">estimated</span></label>
+          <input type="number" id="utilities" value="300" placeholder="e.g. 300" />
+          <span class="field-hint">Electricity, water, internet, gas — est. $200–400/mo</span>
+        </div>
+        <div class="form-group">
+          <label>Supplies &amp; consumables ($/mo) <span class="field-badge estimated">estimated</span></label>
+          <input type="number" id="supplies" value="150" placeholder="e.g. 150" />
+          <span class="field-hint">Toiletries, linens, paper goods — est. $100–200/mo</span>
+        </div>
       </div>
 
       <div class="card-title" style="margin-top:1.25rem">STR operating costs <span style="font-weight:400;text-transform:none;font-size:12px;color:#9ca3af;">— revenue-based</span></div>
@@ -1467,10 +1477,6 @@
         </div>
       </div>
 
-      <div style="margin-top:1rem;padding:10px 14px;background:#f9fafb;border-radius:8px;font-size:12px;color:#6b7280;line-height:1.6;">
-        <strong style="color:#374151;">Also included automatically:</strong>
-        Utilities $300/mo · Supplies &amp; consumables $150/mo
-      </div>
     </div>
 
     <div class="nav-btns">
@@ -2249,8 +2255,10 @@ function calculate() {
   const totalRev      = grossRev + cleaningRev;
   const mgmtFee       = grossRev * mgmtPct;
   const annualMtg     = monthlyMtg * 12;
-  const utilities     = 3600;
-  const supplies      = 1800;
+  const moUtilities   = parseFloat(document.getElementById('utilities').value) || 300;
+  const moSupplies    = parseFloat(document.getElementById('supplies').value)  || 150;
+  const utilities     = moUtilities * 12;
+  const supplies      = moSupplies * 12;
   const annualHOA     = hoaMonthly * 12;
   const annualMaint   = maintenance * 12;
   const totalExp      = annualMtg + propTax + insurance + mgmtFee + utilities + supplies + annualHOA + annualMaint;
@@ -2434,8 +2442,8 @@ function calculate() {
       <div class="cf-row"><span class="cfl">Insurance</span><span class="cfv">−${fmtD(moInsurance)}</span></div>
       ${hoaRow}${maintenanceRow}
       <div class="cf-row"><span class="cfl">Management fee (${Math.round(mgmtPct*100)}% of rental revenue)</span><span class="cfv">−${fmtD(moMgmt)}</span></div>
-      <div class="cf-row"><span class="cfl">Utilities (est.)</span><span class="cfv">−$300</span></div>
-      <div class="cf-row"><span class="cfl">Supplies &amp; consumables (est.)</span><span class="cfv">−$150</span></div>
+      <div class="cf-row"><span class="cfl">Utilities</span><span class="cfv">−${fmtD(moUtilities)}</span></div>
+      <div class="cf-row"><span class="cfl">Supplies &amp; consumables</span><span class="cfv">−${fmtD(moSupplies)}</span></div>
       <div class="cf-divider"><span>Total monthly expenses</span><span>−${fmtD(moTotalExp)}</span></div>
       <div class="cf-net ${netCls}">
         <span class="cf-net-lbl">Net monthly cash flow</span>
