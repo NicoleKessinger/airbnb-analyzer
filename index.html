@@ -365,10 +365,292 @@
     .metrics { grid-template-columns: 1fr 1fr; }
     .rate-grid { grid-template-columns: 1fr; }
   }
+
+  /* ══════════════════════════════════════════════════════════════════════════
+     HOMEPAGE
+     ══════════════════════════════════════════════════════════════════════════ */
+  .homepage {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background: #faf5ff;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+  .homepage.hidden { display: none; }
+  .app.hidden { display: none; }
+
+  /* ── Nav bar ─────────────────────────────────────────────────────────────── */
+  .hp-nav {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 2.5rem;
+    height: 60px;
+    background: rgba(255,255,255,0.82);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(91,33,182,0.1);
+    position: sticky; top: 0; z-index: 50;
+  }
+  .hp-logo {
+    display: flex; align-items: center; gap: 9px;
+    font-size: 15px; font-weight: 700; color: #4c1d95; letter-spacing: -0.02em;
+  }
+  .hp-logo-icon {
+    width: 30px; height: 30px; border-radius: 8px;
+    background: linear-gradient(135deg, #7c3aed, #5b21b6);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; flex-shrink: 0;
+  }
+  .hp-nav-cta {
+    padding: 7px 18px; font-size: 13px; font-weight: 600;
+    background: #5b21b6; color: #fff; border: none; border-radius: 8px;
+    cursor: pointer; transition: background 0.15s;
+  }
+  .hp-nav-cta:hover { background: #4c1d95; }
+
+  /* ── Hero ────────────────────────────────────────────────────────────────── */
+  .hp-hero {
+    flex: 1;
+    display: flex; align-items: center; justify-content: center;
+    padding: 3rem 1.5rem 2rem;
+  }
+  .hp-hero-inner {
+    max-width: 780px; width: 100%;
+    display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; align-items: center;
+  }
+
+  /* Left: copy */
+  .hp-copy { display: flex; flex-direction: column; gap: 0; }
+  .hp-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: #ede9fe; color: #5b21b6;
+    font-size: 11px; font-weight: 700; letter-spacing: 0.06em;
+    padding: 5px 12px; border-radius: 99px;
+    width: fit-content; margin-bottom: 1rem;
+    border: 1px solid #ddd6fe;
+  }
+  .hp-badge-dot { width: 6px; height: 6px; border-radius: 50%; background: #7c3aed;
+    animation: pulse 2s infinite; flex-shrink: 0; }
+  .hp-title {
+    font-size: 38px; font-weight: 900; line-height: 1.12;
+    color: #1c1c1c; letter-spacing: -0.03em; margin-bottom: 1rem;
+  }
+  .hp-title em {
+    font-style: normal;
+    background: linear-gradient(135deg, #7c3aed, #5b21b6);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .hp-desc {
+    font-size: 15px; color: #4b5563; line-height: 1.65;
+    margin-bottom: 1.5rem; max-width: 380px;
+  }
+  .hp-cta-row { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+  .hp-cta-primary {
+    padding: 12px 26px; font-size: 15px; font-weight: 700;
+    background: linear-gradient(135deg, #7c3aed, #5b21b6);
+    color: #fff; border: none; border-radius: 10px; cursor: pointer;
+    transition: all 0.2s; box-shadow: 0 4px 16px rgba(91,33,182,0.28);
+    letter-spacing: -0.01em;
+  }
+  .hp-cta-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 24px rgba(91,33,182,0.38);
+  }
+  .hp-cta-note { font-size: 12px; color: #9ca3af; }
+
+  /* Right: verdict card mockup */
+  .hp-preview {
+    background: #fff;
+    border: 1px solid #e9d5ff;
+    border-radius: 18px;
+    padding: 1.25rem 1.5rem;
+    box-shadow: 0 8px 32px rgba(109,40,217,0.10), 0 1px 4px rgba(0,0,0,0.06);
+  }
+  .hp-preview-badge {
+    display: inline-flex; align-items: center; gap: 7px;
+    background: #16a34a; color: #fff;
+    font-size: 12px; font-weight: 700;
+    padding: 5px 12px; border-radius: 99px; margin-bottom: 10px;
+  }
+  .hp-preview-title {
+    font-size: 17px; font-weight: 800; color: #14532d; margin-bottom: 3px;
+  }
+  .hp-preview-sub { font-size: 12px; color: #6b7280; margin-bottom: 14px; line-height: 1.5; }
+  .hp-preview-metrics {
+    display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 12px;
+  }
+  .hp-preview-metric {
+    background: linear-gradient(135deg,#f0fdf4,#dcfce7);
+    border: 1px solid #86efac; border-radius: 10px; padding: 10px 12px; text-align: center;
+  }
+  .hp-preview-metric.npv {
+    grid-column: 1 / -1;
+    background: linear-gradient(135deg,#faf5ff,#ede9fe);
+    border-color: #c4b5fd;
+  }
+  .hp-preview-metric-val {
+    font-size: 22px; font-weight: 800; color: #16a34a;
+    font-variant-numeric: tabular-nums; line-height: 1.1;
+  }
+  .hp-preview-metric.npv .hp-preview-metric-val { font-size: 30px; color: #5b21b6; }
+  .hp-preview-metric-lbl { font-size: 10px; color: #9ca3af; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.06em; margin-top: 3px; }
+  .hp-preview-divider { border: none; border-top: 1px solid #f3f4f6; margin: 10px 0; }
+  .hp-preview-row {
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 12px; color: #6b7280; padding: 3px 0;
+  }
+  .hp-preview-row strong { color: #374151; }
+  .hp-preview-watermark {
+    font-size: 10px; color: #d1d5db; text-align: center; margin-top: 10px;
+    letter-spacing: 0.05em; text-transform: uppercase;
+  }
+
+  /* ── Feature strip ───────────────────────────────────────────────────────── */
+  .hp-features {
+    background: #fff; border-top: 1px solid #ede9fe;
+    padding: 1.25rem 2.5rem;
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 0;
+  }
+  .hp-feature {
+    display: flex; align-items: flex-start; gap: 12px;
+    padding: 0 1.5rem;
+    border-right: 1px solid #f3f4f6;
+  }
+  .hp-feature:first-child { padding-left: 0; }
+  .hp-feature:last-child  { border-right: none; }
+  .hp-feature-icon {
+    width: 36px; height: 36px; border-radius: 9px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+  }
+  .hp-feature-icon.purple { background: #ede9fe; }
+  .hp-feature-icon.green  { background: #f0fdf4; }
+  .hp-feature-icon.amber  { background: #fffbeb; }
+  .hp-feature-body { display: flex; flex-direction: column; gap: 2px; }
+  .hp-feature-title { font-size: 13px; font-weight: 700; color: #1c1c1c; }
+  .hp-feature-desc  { font-size: 12px; color: #6b7280; line-height: 1.5; }
+
+  @media (max-width: 680px) {
+    .hp-hero-inner { grid-template-columns: 1fr; gap: 2rem; }
+    .hp-preview { display: none; }
+    .hp-title { font-size: 30px; }
+    .hp-features { grid-template-columns: 1fr; }
+    .hp-feature { border-right: none; border-bottom: 1px solid #f3f4f6;
+      padding: 0.75rem 0; }
+    .hp-feature:last-child { border-bottom: none; }
+    .hp-nav { padding: 0 1rem; }
+  }
 </style>
 </head>
 <body>
-<div class="app">
+
+<!-- ══════════════════════════════════════════════════════════════════════════
+     HOMEPAGE
+     ══════════════════════════════════════════════════════════════════════════ -->
+<div class="homepage" id="homepage">
+
+  <!-- Nav -->
+  <nav class="hp-nav">
+    <div class="hp-logo">
+      <div class="hp-logo-icon">🏠</div>
+      STR Analyzer
+    </div>
+    <button class="hp-nav-cta" onclick="showApp()">Analyze a property →</button>
+  </nav>
+
+  <!-- Hero -->
+  <section class="hp-hero">
+    <div class="hp-hero-inner">
+
+      <!-- Left: copy -->
+      <div class="hp-copy">
+        <div class="hp-badge">
+          <span class="hp-badge-dot"></span>
+          AI-powered · Live market data
+        </div>
+
+        <h1 class="hp-title">
+          Is this Airbnb<br>worth <em>buying?</em>
+        </h1>
+
+        <p class="hp-desc">
+          Paste any Zillow or Realtor.com listing and instantly see projected
+          short-term rental income, net cash flow, and investment value —
+          before you make an offer.
+        </p>
+
+        <div class="hp-cta-row">
+          <button class="hp-cta-primary" onclick="showApp()">
+            Analyze a property →
+          </button>
+          <span class="hp-cta-note">Free · No account needed</span>
+        </div>
+      </div>
+
+      <!-- Right: verdict mockup -->
+      <div class="hp-preview" aria-hidden="true">
+        <div class="hp-preview-badge">✓ Strong Investment</div>
+        <div class="hp-preview-title">3BR Condo · Nashville, TN</div>
+        <div class="hp-preview-sub">$485,000 purchase · 20% down · Market-rate occupancy</div>
+
+        <div class="hp-preview-metrics">
+          <div class="hp-preview-metric npv">
+            <div class="hp-preview-metric-val">+$62,400</div>
+            <div class="hp-preview-metric-lbl">Net Present Value</div>
+          </div>
+          <div class="hp-preview-metric">
+            <div class="hp-preview-metric-val">+$1,240</div>
+            <div class="hp-preview-metric-lbl">Monthly Cash Flow</div>
+          </div>
+          <div class="hp-preview-metric">
+            <div class="hp-preview-metric-val">12.4%</div>
+            <div class="hp-preview-metric-lbl">Cash-on-Cash</div>
+          </div>
+        </div>
+
+        <hr class="hp-preview-divider">
+
+        <div class="hp-preview-row"><span>Nightly rate</span><strong>$275/night</strong></div>
+        <div class="hp-preview-row"><span>Occupancy</span><strong>68% · 21 nights/mo</strong></div>
+        <div class="hp-preview-row"><span>Gross annual revenue</span><strong>$85,140</strong></div>
+        <div class="hp-preview-row"><span>Equity value</span><strong>$584,400</strong></div>
+
+        <div class="hp-preview-watermark">Sample analysis — your numbers will vary</div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Feature strip -->
+  <div class="hp-features">
+    <div class="hp-feature">
+      <div class="hp-feature-icon purple">🔗</div>
+      <div class="hp-feature-body">
+        <div class="hp-feature-title">Auto-fill from any listing</div>
+        <div class="hp-feature-desc">Paste a Zillow or Realtor.com URL and AI extracts price, taxes, and location instantly.</div>
+      </div>
+    </div>
+    <div class="hp-feature">
+      <div class="hp-feature-icon green">📈</div>
+      <div class="hp-feature-body">
+        <div class="hp-feature-title">Live short-term rental rates</div>
+        <div class="hp-feature-desc">Conservative, market, and optimistic nightly rate scenarios fetched for your specific city and bedroom count.</div>
+      </div>
+    </div>
+    <div class="hp-feature">
+      <div class="hp-feature-icon amber">⚖️</div>
+      <div class="hp-feature-body">
+        <div class="hp-feature-title">Perpetuity-model valuation</div>
+        <div class="hp-feature-desc">NPV verdict based on equity value vs. your capital invested — the same framework used in institutional real estate.</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+<!-- END HOMEPAGE -->
+
+<div class="app hidden" id="appWrapper">
   <h1>Analyze Any Zillow Property for Airbnb Investment Potential</h1>
   <p class="subtitle">Estimate revenue, occupancy, and ROI in seconds before you buy · MBA 6223 Finance</p>
 
@@ -756,6 +1038,13 @@
 </div>
 
 <script>
+// ── Homepage → App transition ────────────────────────────────────────────────
+function showApp() {
+  document.getElementById('homepage').classList.add('hidden');
+  document.getElementById('appWrapper').classList.remove('hidden');
+  window.scrollTo({ top: 0, behavior: 'instant' });
+}
+
 // ── State ─────────────────────────────────────────────────────────────────────
 let apiKey = localStorage.getItem('anthropic_api_key') || '';
 let selectedRate = 1;
@@ -1000,6 +1289,10 @@ function reset() {
   document.getElementById('downPct').value = '20';
   document.getElementById('down').value = '';
   goTo(0);
+  // Return to homepage
+  document.getElementById('homepage').classList.remove('hidden');
+  document.getElementById('appWrapper').classList.add('hidden');
+  window.scrollTo({ top: 0, behavior: 'instant' });
 }
 
 // ── Claude API call helper ────────────────────────────────────────────────────
