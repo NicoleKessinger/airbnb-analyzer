@@ -562,6 +562,123 @@
       padding: 0.75rem 0; }
     .hp-feature:last-child { border-bottom: none; }
   }
+
+  /* ══════════════════════════════════════════════════════════════════════════
+     GLOSSARY
+     ══════════════════════════════════════════════════════════════════════════ */
+  .glossary-view {
+    max-width: 800px; margin: 0 auto; padding: 2rem 1rem 3rem;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+  .glossary-view.hidden { display: none; }
+  .gl-page-title {
+    font-size: 24px; font-weight: 800; color: #1c1c1c; margin-bottom: 4px;
+    letter-spacing: -0.02em;
+  }
+  .gl-page-sub {
+    font-size: 14px; color: #6b7280; margin-bottom: 0.25rem; line-height: 1.6;
+  }
+  .gl-page-note {
+    display: inline-flex; align-items: center; gap: 6px; font-size: 12px;
+    color: #5b21b6; background: #ede9fe; border: 1px solid #ddd6fe;
+    border-radius: 6px; padding: 5px 12px; margin-bottom: 1.75rem;
+  }
+
+  /* Section wrapper */
+  .gl-section { margin-bottom: 2rem; }
+  .gl-section-header {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 0 10px 14px;
+    border-left: 4px solid #c4b5fd;
+    margin-bottom: 0.875rem;
+  }
+  .gl-section-header.green  { border-left-color: #4ade80; }
+  .gl-section-header.red    { border-left-color: #f87171; }
+  .gl-section-header.blue   { border-left-color: #60a5fa; }
+  .gl-section-header.amber  { border-left-color: #fbbf24; }
+  .gl-section-header.gray   { border-left-color: #9ca3af; }
+  .gl-section-icon { font-size: 18px; }
+  .gl-section-title {
+    font-size: 11px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.08em; color: #374151;
+  }
+  .gl-section-desc { font-size: 12px; color: #9ca3af; margin-top: 1px; }
+
+  /* Term card */
+  .gl-card {
+    background: #fff; border: 1px solid #e5e7eb; border-radius: 12px;
+    padding: 1.1rem 1.4rem; margin-bottom: 0.6rem;
+  }
+  .gl-term {
+    font-size: 15px; font-weight: 700; color: #1c1c1c;
+  }
+  .gl-term-tag {
+    display: inline-block; font-size: 10px; font-weight: 600; padding: 2px 7px;
+    border-radius: 99px; margin-left: 8px; vertical-align: middle;
+    letter-spacing: 0.03em; text-transform: uppercase;
+  }
+  .gl-term-tag.purple { background: #ede9fe; color: #5b21b6; }
+  .gl-term-tag.green  { background: #dcfce7; color: #166534; }
+  .gl-term-tag.amber  { background: #fef3c7; color: #92400e; }
+  .gl-def {
+    font-size: 13px; color: #4b5563; line-height: 1.7; margin-top: 6px;
+  }
+  /* Formula box */
+  .gl-formula-box {
+    background: #f8f7ff; border: 1px solid #e0d9ff; border-radius: 8px;
+    padding: 11px 14px; margin-top: 10px;
+  }
+  .gl-formula-title {
+    font-size: 10px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.07em; color: #7c3aed; margin-bottom: 6px;
+  }
+  .gl-formula-eq {
+    font-family: 'Menlo', 'Consolas', monospace; font-size: 13.5px;
+    font-weight: 600; color: #1c1c1c; line-height: 1.5;
+  }
+  .gl-formula-eq .eq-highlight { color: #5b21b6; }
+  .gl-formula-vars {
+    margin-top: 8px; padding-top: 8px; border-top: 1px dashed #ddd6fe;
+    font-size: 12px; color: #6b7280; line-height: 1.8;
+    font-family: 'Menlo', 'Consolas', monospace;
+  }
+  .gl-formula-vars span { display: block; }
+  .gl-formula-vars .var-name { color: #5b21b6; font-weight: 600; }
+  /* App note */
+  .gl-app-note {
+    font-size: 12px; color: #4c1d95; background: #faf5ff;
+    border-left: 3px solid #c4b5fd; padding: 7px 10px;
+    border-radius: 0 6px 6px 0; margin-top: 10px; line-height: 1.6;
+  }
+  .gl-app-note strong { color: #4c1d95; }
+  /* Constraint / warning */
+  .gl-constraint {
+    background: #fffbeb; border: 1px solid #fde68a; border-radius: 6px;
+    padding: 8px 12px; font-size: 12px; color: #92400e;
+    margin-top: 8px; line-height: 1.6;
+  }
+  /* Verdict table */
+  .gl-verdict-table {
+    width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 10px;
+  }
+  .gl-verdict-table th {
+    font-size: 10px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.06em; color: #9ca3af; text-align: left;
+    padding: 6px 10px; border-bottom: 1px solid #e5e7eb; background: #f9fafb;
+  }
+  .gl-verdict-table td {
+    padding: 9px 10px; border-bottom: 1px solid #f3f4f6;
+    vertical-align: top; font-size: 13px;
+  }
+  .gl-verdict-table tr:last-child td { border-bottom: none; }
+  .gl-verdict-table td:first-child { font-weight: 600; white-space: nowrap; }
+  .gl-vrow-green td { background: #f0fdf4; }
+  .gl-vrow-amber td { background: #fffbeb; }
+  .gl-vrow-red   td { background: #fef2f2; }
+  @media (max-width: 540px) {
+    .gl-formula-eq { font-size: 12px; }
+    .gl-verdict-table { font-size: 12px; }
+  }
 </style>
 </head>
 <body>
@@ -579,13 +696,11 @@
 
     <!-- Nav links -->
     <div class="gnav-links">
-      <button class="gnav-link active" id="gnav-home" onclick="showHome()">
-        🏡 Home
-      </button>
+      <button class="gnav-link active" id="gnav-home" onclick="showHome()">🏡 Home</button>
       <div class="gnav-divider"></div>
-      <button class="gnav-link" id="gnav-app" onclick="showApp()">
-        📊 Analyzer
-      </button>
+      <button class="gnav-link" id="gnav-app" onclick="showApp()">📊 Analyzer</button>
+      <div class="gnav-divider"></div>
+      <button class="gnav-link" id="gnav-glossary" onclick="showGlossary()">📖 Glossary</button>
     </div>
   </div>
 </nav>
@@ -685,6 +800,471 @@
 
 </div>
 <!-- END HOMEPAGE -->
+
+<!-- ══════════════════════════════════════════════════════════════════════════
+     GLOSSARY VIEW
+     ══════════════════════════════════════════════════════════════════════════ -->
+<div class="glossary-view hidden" id="glossaryView">
+
+  <h2 class="gl-page-title">Finance Glossary</h2>
+  <p class="gl-page-sub">Every term and formula used in this analyzer — defined plainly, with the exact calculation shown.</p>
+  <div class="gl-page-note">✓ All formulas verified against the live app code · MBA 6223 Finance</div>
+
+  <!-- ─── SECTION 1: Financing & Initial Investment ──────────────────────── -->
+  <div class="gl-section">
+    <div class="gl-section-header">
+      <span class="gl-section-icon">🏦</span>
+      <div>
+        <div class="gl-section-title">Financing &amp; Initial Investment</div>
+        <div class="gl-section-desc">How the purchase is funded and what capital the investor actually deploys</div>
+      </div>
+    </div>
+
+    <div class="gl-card">
+      <div class="gl-term">Purchase Price</div>
+      <div class="gl-def">The agreed-upon sale price of the property. Every other calculation in this analyzer flows from this single number — it sets the loan size, estimated taxes, cap rate denominator, and (for all-cash purchases) the initial investment.</div>
+      <div class="gl-app-note"><strong>In this app:</strong> entered in Step 1. Required field — the analyzer cannot run without it.</div>
+    </div>
+
+    <div class="gl-card">
+      <div class="gl-term">Down Payment</div>
+      <div class="gl-def">The portion of the purchase price the buyer pays upfront in cash. The remaining balance becomes the mortgage loan principal. A larger down payment means less debt, lower monthly payments, but more capital deployed.</div>
+      <div class="gl-formula-box">
+        <div class="gl-formula-title">Formula</div>
+        <div class="gl-formula-eq">Down Payment ($) = Purchase Price × Down Payment (%)</div>
+        <div class="gl-formula-vars">
+          <span><span class="var-name">Down Payment (%)</span> = investor-chosen percentage, typically 20%</span>
+        </div>
+      </div>
+      <div class="gl-app-note"><strong>In this app:</strong> entered in Step 2. The % field auto-calculates the $ amount — they stay in sync. Defaults to 20%.</div>
+    </div>
+
+    <div class="gl-card">
+      <div class="gl-term">Loan Principal</div>
+      <div class="gl-def">The amount borrowed from the lender — the portion of the purchase price not covered by the down payment. This is the starting balance of the mortgage that will be repaid over the loan term with interest.</div>
+      <div class="gl-formula-box">
+        <div class="gl-formula-title">Formula</div>
+        <div class="gl-formula-eq">Principal = Purchase Price − Down Payment</div>
+        <div class="gl-formula-eq" style="margin-top:4px;color:#6b7280;font-size:12px">Principal = 0 &nbsp;(for all-cash purchases)</div>
+      </div>
+      <div class="gl-app-note"><strong>In this app:</strong> <code>principal = allCash ? 0 : price − down</code></div>
+    </div>
+
+    <div class="gl-card">
+      <div class="gl-term">Closing Costs</div>
+      <div class="gl-def">One-time transaction costs paid at closing, separate from the down payment. Typically include loan origination fees, title insurance, appraisal, escrow, and recording fees — usually 2–5% of the purchase price.</div>
+      <div class="gl-app-note"><strong>In this app:</strong> entered in Step 1. Added to the down payment (or purchase price for all-cash) to form the <em>Initial Investment</em>. They are <strong>not</strong> included in monthly operating expenses.</div>
+    </div>
+
+    <div class="gl-card">
+      <div class="gl-term">Initial Investment <span class="gl-term-tag purple">Capital Deployed</span></div>
+      <div class="gl-def">The total cash the investor must commit on day one to acquire the property. This is the basis for NPV and Cash-on-Cash Return — it represents the true equity at risk. Critically, it varies depending on whether the purchase is financed or all-cash.</div>
+      <div class="gl-formula-box">
+        <div class="gl-formula-title">Formula — Two Cases</div>
+        <div class="gl-formula-eq"><span class="eq-highlight">Financed:</span>  Initial Investment = Down Payment + Closing Costs</div>
+        <div class="gl-formula-eq" style="margin-top:6px"><span class="eq-highlight">All-cash:</span>  Initial Investment = Purchase Price + Closing Costs</div>
+        <div class="gl-formula-vars">
+          <span>For financed deals, only the <em>equity portion</em> (down payment) is the investor's capital — the bank provides the rest. Closing costs are always out-of-pocket.</span>
+        </div>
+      </div>
+      <div class="gl-app-note"><strong>In this app:</strong> <code>initialInvestment = (allCash ? price : down) + closingCosts</code> — used as the denominator in NPV and Cash-on-Cash. Never included in monthly expense calculations.</div>
+    </div>
+
+    <div class="gl-card">
+      <div class="gl-term">Monthly Mortgage Payment</div>
+      <div class="gl-def">The fixed monthly payment that fully repays both principal and interest over the loan term. Derived from the standard mortgage amortization formula — early payments are mostly interest, later payments are mostly principal.</div>
+      <div class="gl-formula-box">
+        <div class="gl-formula-title">Formula — Standard Mortgage Amortization</div>
+        <div class="gl-formula-eq">M = P × [ r(1 + r)<sup>n</sup> ] ÷ [ (1 + r)<sup>n</sup> − 1 ]</div>
+        <div class="gl-formula-vars">
+          <span><span class="var-name">M</span> = monthly payment</span>
+          <span><span class="var-name">P</span> = loan principal (purchase price − down payment)</span>
+          <span><span class="var-name">r</span> = monthly interest rate = annual rate ÷ 12</span>
+          <span><span class="var-name">n</span> = total number of payments = loan term (years) × 12</span>
+        </div>
+      </div>
+      <div class="gl-app-note"><strong>In this app:</strong> <code>calcMortgage(principal, annualRate, years)</code> — called for each financed scenario. Returns 0 for all-cash purchases.</div>
+    </div>
+  </div>
+
+  <!-- ─── SECTION 2: Revenue ─────────────────────────────────────────────── -->
+  <div class="gl-section">
+    <div class="gl-section-header green">
+      <span class="gl-section-icon">💰</span>
+      <div>
+        <div class="gl-section-title">Revenue</div>
+        <div class="gl-section-desc">Income generated by renting the property as a short-term rental</div>
+      </div>
+    </div>
+
+    <div class="gl-card">
+      <div class="gl-term">Nightly Rate</div>
+      <div class="gl-def">The price charged to guests per night. The single most powerful lever for revenue — a $25/night increase on 200 rented nights is $5,000 of additional annual income. Market rates vary by city, season, bedroom count, and listing quality.</div>
+      <div class="gl-app-note"><strong>In this app:</strong> fetched via live AI web search for your city and bedroom count. Shown as three scenarios (conservative / market / optimistic). Can be overridden manually in Step 4.</div>
+    </div>
+
+    <div class="gl-card">
+      <div class="gl-term">Occupancy Rate</div>
+      <div class="gl-def">The percentage of available nights in a year that the property is actually booked. A 65% occupancy means the property is rented roughly 237 nights per year. This is the second most important revenue driver after nightly rate.</div>
+      <div class="gl-app-note"><strong>In this app:</strong> each market-rate card includes a matching occupancy estimate. Typical Airbnb occupancy runs 60–80%. Can be overridden manually. Default if unset: mid-market estimate (~65–70%).</div>
+    </div>
+
+    <div class="gl-card">
+      <div class="gl-term">Nights Rented per Month</div>
+      <div class="gl-def">The number of nights the property is occupied each month, derived from the annual occupancy rate. Rounding at the monthly level — rather than the annual level — ensures the nightly rate displayed in the UI multiplied by nights displayed equals the revenue displayed exactly.</div>
+      <div class="gl-formula-box">
+        <div class="gl-formula-title">Formula</div>
+        <div class="gl-formula-eq">Nights/Month = round( 365 × Occupancy Rate ÷ 12 )</div>
+        <div class="gl-formula-eq" style="margin-top:4px">Annual Nights = Nights/Month × 12</div>
+        <div class="gl-formula-vars">
+          <span><span class="var-name">Occupancy Rate</span> = decimal (e.g. 0.68 for 68%)</span>
+          <span>Annual nights is derived from the rounded monthly figure to prevent rounding discrepancies.</span>
+        </div>
+      </div>
+      <div class="gl-app-note"><strong>In this app:</strong> <code>nightsPerMonth = Math.round(365 × occupancy / 12)</code>; then <code>daysRented = nightsPerMonth × 12</code></div>
+    </div>
+
+    <div class="gl-card">
+      <div class="gl-term">Gross Rental Revenue <span class="gl-term-tag green">Annual</span></div>
+      <div class="gl-def">Total income from nightly rental rates before any deductions. Does not include cleaning fees.</div>
+      <div class="gl-formula-box">
+        <div class="gl-formula-title">Formula</div>
+        <div class="gl-formula-eq">Gross Rental Revenue = Annual Nights × Nightly Rate</div>
+        <div class="gl-formula-eq" style="margin-top:4px;color:#6b7280;font-size:12px">= (Nights/Month × 12) × Nightly Rate</div>
+      </div>
+      <div class="gl-app-note"><strong>In this app:</strong> <code>grossRev = daysRented × nightlyRate</code> — management fees are calculated on this figure only.</div>
+    </div>
+
+    <div class="gl-card">
+      <div class="gl-term">Cleaning Fee Revenue <span class="gl-term-tag green">Annual</span></div>
+      <div class="gl-def">Revenue collected from guests to cover the cost of cleaning between stays. Treated as pass-through income — it is included in Total Revenue, reducing the break-even threshold. The management fee is <em>not</em> applied to cleaning revenue.</div>
+      <div class="gl-formula-box">
+        <div class="gl-formula-title">Formula</div>
+        <div class="gl-formula-eq">Cleaning Revenue = Stays/Month × 12 × Cleaning Fee per Stay</div>
+      </div>
+      <div class="gl-app-note"><strong>In this app:</strong> <code>cleaningRev = staysPM × 12 × cleanFee</code>. Default: 6 stays/month × $120/stay = $720/month.</div>
+    </div>
+
+    <div class="gl-card">
+      <div class="gl-term">Total Revenue <span class="gl-term-tag green">Annual</span></div>
+      <div class="gl-def">All income the property generates in a year — the starting point for every expense and performance calculation.</div>
+      <div class="gl-formula-box">
+        <div class="gl-formula-title">Formula</div>
+        <div class="gl-formula-eq">Total Revenue = Gross Rental Revenue + Cleaning Revenue</div>
+      </div>
+      <div class="gl-app-note"><strong>In this app:</strong> <code>totalRev = grossRev + cleaningRev</code></div>
+    </div>
+  </div>
+
+  <!-- ─── SECTION 3: Operating Expenses ─────────────────────────────────── -->
+  <div class="gl-section">
+    <div class="gl-section-header red">
+      <span class="gl-section-icon">📋</span>
+      <div>
+        <div class="gl-section-title">Operating Expenses</div>
+        <div class="gl-section-desc">Recurring costs of owning and operating the property</div>
+      </div>
+    </div>
+
+    <div class="gl-card">
+      <div class="gl-term">Property Tax <span class="gl-term-tag amber">Annual</span></div>
+      <div class="gl-def">A recurring tax levied by local government based on the assessed value of the property. Rates vary widely by jurisdiction — typically 0.5–2.5% of purchase price per year.</div>
+      <div class="gl-app-note"><strong>In this app:</strong> entered in Step 3. Auto-estimated at <strong>1.2% of purchase price</strong> as a default if not manually provided. Included in both Total Expenses and NOI calculations.</div>
+    </div>
+
+    <div class="gl-card">
+      <div class="gl-term">Insurance <span class="gl-term-tag amber">Annual</span></div>
+      <div class="gl-def">Homeowner's or short-term rental insurance protecting the property against damage, liability, and loss of income. STR policies typically cost more than standard homeowner's policies due to increased guest traffic.</div>
+      <div class="gl-app-note"><strong>In this app:</strong> entered in Step 3. Auto-estimated at <strong>0.5% of purchase price</strong> annually if not provided. Minimum default: $2,400/year.</div>
+    </div>
+
+    <div class="gl-card">
+      <div class="gl-term">HOA Fee <span class="gl-term-tag amber">Monthly</span></div>
+      <div class="gl-def">Mandatory fee paid to a Homeowners Association for shared amenities, maintenance, and community management. Applies to condos, townhouses, and planned communities. Entered monthly; converted to annual for calculations.</div>
+      <div class="gl-app-note"><strong>In this app:</strong> <code>annualHOA = hoaMonthly × 12</code>. Defaults to $0. If the AI auto-fills from a listing, this field is populated automatically.</div>
+    </div>
+
+    <div class="gl-card">
+      <div class="gl-term">Maintenance <span class="gl-term-tag amber">Monthly</span></div>
+      <div class="gl-def">Ongoing costs to keep the property in rentable condition — pool service, lawn care, HVAC servicing, minor repairs. A common rule of thumb is 1–2% of property value per year.</div>
+      <div class="gl-app-note"><strong>In this app:</strong> entered monthly; converted to annual. <code>annualMaint = maintenance × 12</code>. Default: $200/month.</div>
+    </div>
+
+    <div class="gl-card">
+      <div class="gl-term">Management Fee</div>
+      <div class="gl-def">A percentage-based fee paid to a property manager who handles bookings, guest communication, cleaning coordination, and maintenance. Applied only to <em>rental</em> revenue — not to cleaning fee revenue, which is a guest-to-host pass-through.</div>
+      <div class="gl-formula-box">
+        <div class="gl-formula-title">Formula</div>
+        <div class="gl-formula-eq">Management Fee = Gross Rental Revenue × Management Rate</div>
+        <div class="gl-formula-vars">
+          <span><span class="var-name">Note:</span> applied to rental revenue only — NOT to cleaning fees</span>
+          <span><span class="var-name">Management Rate</span> = typically 20–25% for full-service STR management</span>
+        </div>
+      </div>
+      <div class="gl-app-note"><strong>In this app:</strong> <code>mgmtFee = grossRev × mgmtPct</code>. Default: 20%. Setting to 0% represents self-management.</div>
+    </div>
+
+    <div class="gl-card">
+      <div class="gl-term">Utilities &amp; Supplies <span class="gl-term-tag amber">Fixed estimates</span></div>
+      <div class="gl-def">Utilities (electricity, water, internet, gas) and consumable supplies (toiletries, linens, paper goods) are fixed operating costs included automatically in every analysis.</div>
+      <div class="gl-formula-box">
+        <div class="gl-formula-title">Fixed Values Used in This App</div>
+        <div class="gl-formula-eq">Utilities = $300/month = $3,600/year</div>
+        <div class="gl-formula-eq" style="margin-top:4px">Supplies  = $150/month = $1,800/year</div>
+      </div>
+      <div class="gl-app-note"><strong>In this app:</strong> hardcoded as <code>utilities = 3600</code> and <code>supplies = 1800</code> annually. These appear in the operating breakdown and are included in both Total Expenses and NOI.</div>
+    </div>
+  </div>
+
+  <!-- ─── SECTION 4: Operating Performance ──────────────────────────────── -->
+  <div class="gl-section">
+    <div class="gl-section-header blue">
+      <span class="gl-section-icon">📊</span>
+      <div>
+        <div class="gl-section-title">Operating Performance Metrics</div>
+        <div class="gl-section-desc">How the property performs as a business, independent of how it is financed</div>
+      </div>
+    </div>
+
+    <div class="gl-card">
+      <div class="gl-term">Net Operating Income (NOI)</div>
+      <div class="gl-def">Annual income after all operating expenses but <strong>before</strong> mortgage payments. NOI is the universally accepted measure of a property's standalone income-generating ability — it lets investors compare properties regardless of how they are financed. By definition, debt service is always excluded from NOI.</div>
+      <div class="gl-formula-box">
+        <div class="gl-formula-title">Formula</div>
+        <div class="gl-formula-eq">NOI = Total Revenue − Operating Expenses</div>
+        <div class="gl-formula-eq" style="margin-top:6px;font-size:12.5px">= Total Revenue − Property Tax − Insurance − Management Fee<br>&nbsp;&nbsp;− Utilities − Supplies − HOA − Maintenance</div>
+        <div class="gl-formula-vars">
+          <span><span class="var-name">Mortgage is explicitly EXCLUDED</span> — by industry definition, NOI is pre-financing.</span>
+          <span><span class="var-name">Operating Expenses</span> = all costs except debt service</span>
+        </div>
+      </div>
+      <div class="gl-app-note"><strong>In this app:</strong> <code>noi = totalRev − propTax − insurance − mgmtFee − utilities − supplies − annualHOA − annualMaint</code></div>
+    </div>
+
+    <div class="gl-card">
+      <div class="gl-term">Annual Cash Flow</div>
+      <div class="gl-def">The actual income remaining after <strong>all</strong> expenses including mortgage payments — the money an investor actually receives each year. Unlike NOI, this reflects the reality of being a leveraged investor who must service debt.</div>
+      <div class="gl-formula-box">
+        <div class="gl-formula-title">Formula</div>
+        <div class="gl-formula-eq">Annual Cash Flow = Total Revenue − Total Expenses</div>
+        <div class="gl-formula-eq" style="margin-top:6px;font-size:12.5px">= NOI − Annual Mortgage Payments</div>
+        <div class="gl-formula-vars">
+          <span><span class="var-name">Total Expenses</span> = Mortgage + Property Tax + Insurance + Management Fee + Utilities + Supplies + HOA + Maintenance</span>
+          <span><span class="var-name">For all-cash purchases:</span> Annual Cash Flow = NOI (no mortgage)</span>
+        </div>
+      </div>
+      <div class="gl-app-note"><strong>In this app:</strong> <code>annualCF = totalRev − totalExp</code>. This is the <em>C</em> used in the Gordon Growth Model valuation.</div>
+    </div>
+
+    <div class="gl-card">
+      <div class="gl-term">Capitalization Rate (Cap Rate) <span class="gl-term-tag amber">Display only</span></div>
+      <div class="gl-def">The annualized return a property would generate if purchased entirely in cash. Because it excludes financing, it is used to compare properties on a level playing field — independent of how any one investor chooses to fund the deal. A higher cap rate means more income relative to price.</div>
+      <div class="gl-formula-box">
+        <div class="gl-formula-title">Formula</div>
+        <div class="gl-formula-eq">Cap Rate = ( NOI ÷ Purchase Price ) × 100</div>
+        <div class="gl-formula-vars">
+          <span><span class="var-name">NOI</span> = Net Operating Income (pre-financing)</span>
+          <span><span class="var-name">Benchmark:</span> STR properties typically target 6–10% cap rates</span>
+        </div>
+      </div>
+      <div class="gl-app-note"><strong>In this app:</strong> <code>capRate = (noi / price) × 100</code>. Shown for reference only — <strong>does not affect the investment verdict</strong>. The verdict is driven by NPV.</div>
+    </div>
+
+    <div class="gl-card">
+      <div class="gl-term">Debt Service Coverage Ratio (DSCR)</div>
+      <div class="gl-def">Measures whether rental income can cover mortgage payments. Lenders require a DSCR of at least 1.25× for investment property loans — meaning rent must cover 125% of the mortgage. A DSCR below 1.0 means the property runs a cash deficit even before any other expenses.</div>
+      <div class="gl-formula-box">
+        <div class="gl-formula-title">Formula</div>
+        <div class="gl-formula-eq">DSCR = NOI ÷ Annual Mortgage Payment</div>
+        <div class="gl-formula-vars">
+          <span><span class="var-name">DSCR ≥ 1.25</span> = Strong — lender-preferred threshold</span>
+          <span><span class="var-name">DSCR 1.00–1.25</span> = Marginal — income barely covers debt</span>
+          <span><span class="var-name">DSCR &lt; 1.00</span> = Failing — rent does not cover the mortgage</span>
+        </div>
+      </div>
+      <div class="gl-app-note"><strong>In this app:</strong> <code>dscr = noi / annualMtg</code>. Displayed as N/A for all-cash purchases (no debt to cover).</div>
+    </div>
+
+    <div class="gl-card">
+      <div class="gl-term">Break-Even Occupancy</div>
+      <div class="gl-def">The minimum occupancy rate required for the property to generate positive cash flow. Below this threshold, the property loses money. Used as an operating health signal — not used in the investment verdict.</div>
+      <div class="gl-formula-box">
+        <div class="gl-formula-title">Formula</div>
+        <div class="gl-formula-eq">Break-Even Occ =</div>
+        <div class="gl-formula-eq" style="margin-top:4px;padding-left:16px">( Fixed Annual Expenses − Cleaning Revenue )<br>÷ ( 365 × Nightly Rate × (1 − Management Rate) ) × 100</div>
+        <div class="gl-formula-vars">
+          <span><span class="var-name">Fixed Annual Expenses</span> = Mortgage + Property Tax + Insurance + Utilities + Supplies + HOA + Maintenance</span>
+          <span><span class="var-name">Net revenue per night</span> = Nightly Rate × (1 − Management Rate) — management fee reduces each dollar earned</span>
+          <span><span class="var-name">Cleaning Revenue</span> is subtracted because it is collected regardless of nightly occupancy, reducing the threshold</span>
+        </div>
+      </div>
+      <div class="gl-app-note"><strong>In this app:</strong> <code>beOcc = (fixedExpAnnual − cleaningRev) / (365 × nightlyRate × (1 − mgmtPct)) × 100</code></div>
+    </div>
+  </div>
+
+  <!-- ─── SECTION 5: Gordon Growth Model / Valuation ─────────────────────── -->
+  <div class="gl-section">
+    <div class="gl-section-header">
+      <span class="gl-section-icon">📈</span>
+      <div>
+        <div class="gl-section-title">Investment Valuation — Gordon Growth Model</div>
+        <div class="gl-section-desc">How the app converts rental income into a property value and an investment verdict</div>
+      </div>
+    </div>
+
+    <div class="gl-card">
+      <div class="gl-term">Discount Rate — Required Rate of Return (r)</div>
+      <div class="gl-def">The minimum annual return an investor demands to justify putting capital into this specific investment given its risk. Reflects the opportunity cost of capital — what you could earn in an alternative investment of similar risk (e.g. the S&amp;P 500 historically returns ~10%/year; a riskier STR in a volatile market should require a higher hurdle).</div>
+      <div class="gl-formula-box">
+        <div class="gl-formula-title">Options in this App</div>
+        <div class="gl-formula-eq">6% — Low risk (stable rental market)</div>
+        <div class="gl-formula-eq">8% — Medium risk (typical Airbnb)  ← default</div>
+        <div class="gl-formula-eq">10% — High risk (volatile STR market)</div>
+        <div class="gl-formula-eq">12% — Very high risk (speculative)</div>
+      </div>
+      <div class="gl-app-note"><strong>In this app:</strong> <code>discount = riskLevelPct / 100</code>. Selected in Step 4. Must strictly exceed the growth rate (r &gt; g) for the valuation to be mathematically valid.</div>
+    </div>
+
+    <div class="gl-card">
+      <div class="gl-term">Income Growth Rate (g)</div>
+      <div class="gl-def">The expected rate at which annual rental income will grow perpetually into the future. Driven by rent inflation, market appreciation, and pricing power. A higher growth rate means the income stream is worth more today.</div>
+      <div class="gl-formula-box">
+        <div class="gl-formula-title">Options in this App</div>
+        <div class="gl-formula-eq">2% — Conservative  ← default</div>
+        <div class="gl-formula-eq">4% — Moderate</div>
+        <div class="gl-formula-eq">6% — Aggressive</div>
+      </div>
+      <div class="gl-constraint">⚠ <strong>Constraint:</strong> r must strictly exceed g (r &gt; g). If the growth rate equals or exceeds the discount rate, the perpetuity formula produces an infinite or nonsensical value. The app will show an error and withhold the verdict if this condition is violated.</div>
+      <div class="gl-app-note"><strong>In this app:</strong> <code>g = growthPct / 100</code>. Selected in Step 4.</div>
+    </div>
+
+    <div class="gl-card">
+      <div class="gl-term">Equity Value <span class="gl-term-tag purple">Gordon Growth Model</span></div>
+      <div class="gl-def">The present value of all future rental cash flows, assuming they grow at a constant rate forever. Based on the <strong>Gordon Growth Model</strong> (also called the Dividend Discount Model), originally developed to value stocks that pay growing dividends — applied here to rental income streams. The result tells you what the income stream is worth today given your required return.</div>
+      <div class="gl-formula-box">
+        <div class="gl-formula-title">Formula — Growing Perpetuity</div>
+        <div class="gl-formula-eq">Equity Value = <span class="eq-highlight">C ÷ ( r − g )</span></div>
+        <div class="gl-formula-vars">
+          <span><span class="var-name">C</span> = Current annual cash flow (the exact figure shown in Operating Performance)</span>
+          <span><span class="var-name">r</span> = Required rate of return (discount rate)</span>
+          <span><span class="var-name">g</span> = Expected annual income growth rate</span>
+          <span><span class="var-name">r − g</span> = The "spread" — smaller spread means higher value</span>
+          <span style="margin-top:6px;color:#92400e;font-weight:600">Important: C is NOT inflated by (1+g).</span>
+          <span>Some textbooks use C₁ = C₀ × (1+g) when the next period's cash flow is known. Here we use the current observed cash flow directly — the growth assumption is already embedded in the (r−g) denominator, which prices in all future growth. Inflating C again would double-count the first year's growth.</span>
+        </div>
+      </div>
+      <div class="gl-app-note"><strong>In this app:</strong> <code>incomeValue = annualCF / (discount − g)</code>
+        <br>For <strong>financed</strong> purchases: annualCF is the post-mortgage (levered) cash flow → Equity Value measures the return on equity deployed.
+        <br>For <strong>all-cash</strong> purchases: annualCF is the unlevered cash flow → Equity Value measures the return on the full property value.</div>
+    </div>
+
+    <div class="gl-card">
+      <div class="gl-term">Net Present Value (NPV)</div>
+      <div class="gl-def">The difference between what the income stream is worth (Equity Value) and what you actually have to pay for it (Initial Investment). A positive NPV means you are acquiring a cash flow stream for less than its intrinsic value — the deal creates wealth. A negative NPV means you are overpaying relative to the income the property can generate.</div>
+      <div class="gl-formula-box">
+        <div class="gl-formula-title">Formula</div>
+        <div class="gl-formula-eq">NPV = Equity Value − Initial Investment</div>
+        <div class="gl-formula-eq" style="margin-top:6px">= <span class="eq-highlight">C ÷ (r − g)</span> − Initial Investment</div>
+        <div class="gl-formula-vars">
+          <span><span class="var-name">Financed:</span> Initial Investment = Down Payment + Closing Costs</span>
+          <span><span class="var-name">All-cash:</span> Initial Investment = Purchase Price + Closing Costs</span>
+          <span style="margin-top:4px"><span class="var-name">NPV &gt; 0</span> → income value exceeds capital deployed → wealth-creating deal</span>
+          <span><span class="var-name">NPV &lt; 0</span> → income value is less than capital deployed → you are paying a premium over intrinsic value</span>
+        </div>
+      </div>
+      <div class="gl-app-note"><strong>In this app:</strong> <code>npv = incomeValue − initialInvestment</code>. NPV is the <strong>sole driver of the investment verdict</strong> (green / amber / red). Cap Rate and Cash-on-Cash are display-only.</div>
+    </div>
+  </div>
+
+  <!-- ─── SECTION 6: Return Metrics ─────────────────────────────────────── -->
+  <div class="gl-section">
+    <div class="gl-section-header amber">
+      <span class="gl-section-icon">🎯</span>
+      <div>
+        <div class="gl-section-title">Return Metrics</div>
+        <div class="gl-section-desc">Additional performance measures displayed for context — not used in the verdict</div>
+      </div>
+    </div>
+
+    <div class="gl-card">
+      <div class="gl-term">Cash-on-Cash Return (CoC) <span class="gl-term-tag amber">Display only</span></div>
+      <div class="gl-def">Annual cash income expressed as a percentage of total cash invested. Measures the immediate yearly yield on deployed capital — analogous to a stock's dividend yield. A 10% CoC means you earn $10 in cash for every $100 invested, each year. Does not account for appreciation, loan paydown, or the time value of money.</div>
+      <div class="gl-formula-box">
+        <div class="gl-formula-title">Formula</div>
+        <div class="gl-formula-eq">Cash-on-Cash = ( Annual Cash Flow ÷ Initial Investment ) × 100</div>
+        <div class="gl-formula-vars">
+          <span><span class="var-name">Annual Cash Flow</span> = post-expense, post-mortgage income</span>
+          <span><span class="var-name">Initial Investment</span> = down payment + closing costs (or full price for all-cash)</span>
+        </div>
+      </div>
+      <div class="gl-app-note"><strong>In this app:</strong> <code>cashOnCash = (annualCF / initialInvestment) × 100</code>. Shown as a reference metric — <strong>does not affect the verdict</strong>.</div>
+    </div>
+
+    <div class="gl-card">
+      <div class="gl-term">Payback Period</div>
+      <div class="gl-def">The number of years required to recover the initial investment entirely from operating cash flow. A simple, intuitive metric — but it ignores the time value of money (a dollar in year 10 is treated the same as a dollar in year 1). Shorter is better.</div>
+      <div class="gl-formula-box">
+        <div class="gl-formula-title">Formula</div>
+        <div class="gl-formula-eq">Payback Period = Initial Investment ÷ Annual Cash Flow</div>
+        <div class="gl-formula-vars">
+          <span>Returns <span class="var-name">"Not recovered"</span> if Annual Cash Flow ≤ 0 (investment never pays back from operations alone)</span>
+        </div>
+      </div>
+      <div class="gl-app-note"><strong>In this app:</strong> <code>paybackYrs = initialInvestment / annualCF</code> when annualCF &gt; 0, rounded to 1 decimal place.</div>
+    </div>
+  </div>
+
+  <!-- ─── SECTION 7: Investment Verdict Logic ────────────────────────────── -->
+  <div class="gl-section">
+    <div class="gl-section-header gray">
+      <span class="gl-section-icon">⚖️</span>
+      <div>
+        <div class="gl-section-title">Investment Verdict Logic</div>
+        <div class="gl-section-desc">How the app translates NPV into a buy / hold / pass recommendation</div>
+      </div>
+    </div>
+
+    <div class="gl-card">
+      <div class="gl-term">Verdict Thresholds</div>
+      <div class="gl-def">The verdict is determined exclusively by NPV — no other metric (cap rate, CoC, DSCR) affects the outcome. NPV is compared to zero and to a 30% loss threshold relative to initial investment.</div>
+      <table class="gl-verdict-table">
+        <thead>
+          <tr>
+            <th>Condition</th>
+            <th>Rating</th>
+            <th>Meaning</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="gl-vrow-green">
+            <td>NPV &gt; $0</td>
+            <td>✅ Strong Investment</td>
+            <td>Equity Value exceeds capital deployed. The income stream is worth more than you paid.</td>
+          </tr>
+          <tr class="gl-vrow-amber">
+            <td>NPV &gt; −30% of Initial Investment</td>
+            <td>⚠️ Marginal</td>
+            <td>Income partially justifies the deal but falls short of recovering full capital.</td>
+          </tr>
+          <tr class="gl-vrow-red">
+            <td>NPV ≤ −30% of Initial Investment</td>
+            <td>❌ Challenging</td>
+            <td>The income stream cannot justify this investment at current rates and assumptions.</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="gl-formula-box" style="margin-top:10px">
+        <div class="gl-formula-title">Threshold Formulas</div>
+        <div class="gl-formula-eq">Green:  NPV &gt; 0</div>
+        <div class="gl-formula-eq">Amber:  NPV &gt; −( Initial Investment × 0.30 )</div>
+        <div class="gl-formula-eq">Red:    NPV ≤ −( Initial Investment × 0.30 )</div>
+      </div>
+      <div class="gl-app-note"><strong>Display-only metrics:</strong> Cap Rate and Cash-on-Cash Return appear in the results for context but are <strong>explicitly excluded</strong> from the verdict calculation. The verdict is driven solely by NPV = C ÷ (r − g) − Initial Investment.</div>
+    </div>
+  </div>
+
+</div>
+<!-- END GLOSSARY VIEW -->
 
 <div class="app hidden" id="appWrapper">
   <h1>Analyze Any Zillow Property for Airbnb Investment Potential</h1>
@@ -1075,19 +1655,21 @@
 
 <script>
 // ── Navigation helpers ────────────────────────────────────────────────────────
-// setView(view): shows one view ('home' | 'app'), hides the other,
+// setView(view): shows one view ('home' | 'app' | 'glossary'), hides the others,
 // and syncs the global nav active states.
 function setView(view) {
-  const isHome = view === 'home';
-  document.getElementById('homepage').classList.toggle('hidden', !isHome);
-  document.getElementById('appWrapper').classList.toggle('hidden', isHome);
-  document.getElementById('gnav-home').classList.toggle('active', isHome);
-  document.getElementById('gnav-app').classList.toggle('active', !isHome);
+  document.getElementById('homepage').classList.toggle('hidden',      view !== 'home');
+  document.getElementById('appWrapper').classList.toggle('hidden',    view !== 'app');
+  document.getElementById('glossaryView').classList.toggle('hidden',  view !== 'glossary');
+  document.getElementById('gnav-home').classList.toggle('active',     view === 'home');
+  document.getElementById('gnav-app').classList.toggle('active',      view === 'app');
+  document.getElementById('gnav-glossary').classList.toggle('active', view === 'glossary');
   window.scrollTo({ top: 0, behavior: 'instant' });
 }
 
-function showHome() { setView('home'); }
-function showApp()  { setView('app');  }
+function showHome()     { setView('home'); }
+function showApp()      { setView('app'); }
+function showGlossary() { setView('glossary'); }
 
 // ── State ─────────────────────────────────────────────────────────────────────
 let apiKey = localStorage.getItem('anthropic_api_key') || '';
