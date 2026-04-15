@@ -867,7 +867,7 @@
           <span>For financed deals, only the <em>equity portion</em> (down payment) is the investor's capital — the bank provides the rest. Closing costs are always out-of-pocket.</span>
         </div>
       </div>
-      <div class="gl-app-note"><strong>In this app:</strong> <code>initialInvestment = (allCash ? price : down) + closingCosts</code> — used as the denominator in NPV and Cash-on-Cash. Never included in monthly expense calculations.</div>
+      <div class="gl-app-note"><strong>In this app:</strong> <code>initialInvestment = (allCash ? price : down) + closingCosts + renovation + furnishing</code> — used as the denominator in NPV and Cash-on-Cash. Never included in monthly expense calculations.</div>
     </div>
 
     <div class="gl-card">
@@ -1194,7 +1194,7 @@
         <div class="gl-formula-eq">Cash-on-Cash = ( Annual Cash Flow ÷ Initial Investment ) × 100</div>
         <div class="gl-formula-vars">
           <span><span class="var-name">Annual Cash Flow</span> = post-expense, post-mortgage income</span>
-          <span><span class="var-name">Initial Investment</span> = down payment + closing costs (or full price for all-cash)</span>
+          <span><span class="var-name">Initial Investment</span> = down payment + closing costs + renovation + furnishing (or full price for all-cash)</span>
         </div>
       </div>
       <div class="gl-app-note"><strong>In this app:</strong> <code>cashOnCash = (annualCF / initialInvestment) × 100</code>. Shown as a reference metric — <strong>does not affect the verdict</strong>.</div>
@@ -1354,6 +1354,16 @@
           <label>Closing costs ($)</label>
           <input type="number" id="closingCosts" value="" placeholder="e.g. 9700 (≈2%)" />
           <span class="field-hint">Title, origination fees, etc. — included in initial investment</span>
+        </div>
+        <div class="form-group">
+          <label>Renovation budget ($)</label>
+          <input type="number" id="renovation" value="" placeholder="e.g. 20000" />
+          <span class="field-hint">Repairs, remodeling, upgrades — added to initial investment</span>
+        </div>
+        <div class="form-group">
+          <label>Furnishing budget ($)</label>
+          <input type="number" id="furnishing" value="" placeholder="e.g. 15000" />
+          <span class="field-hint">Furniture, appliances, décor for STR — added to initial investment</span>
         </div>
       </div>
     </div>
@@ -2215,6 +2225,8 @@ function calculate() {
   const allCash  = document.getElementById('allCash')?.checked || false;
   const down         = allCash ? price : (parseFloat(document.getElementById('down').value) || price * 0.2);
   const closingCosts = parseFloat(document.getElementById('closingCosts').value) || 0;
+  const renovation   = parseFloat(document.getElementById('renovation').value)   || 0;
+  const furnishing   = parseFloat(document.getElementById('furnishing').value)   || 0;
   const moPropTaxIn  = parseFloat(document.getElementById('tax').value)       || 500;
   const moInsuranceIn= parseFloat(document.getElementById('insurance').value) || 200;
   const propTax  = moPropTaxIn * 12;
@@ -2245,7 +2257,7 @@ function calculate() {
 
   // ── Core income calculations ──────────────────────────────────────────────
   const principal     = allCash ? 0 : price - down;
-  const initialInvestment = (allCash ? price : down) + closingCosts;  // used only in NPV and payback — never in monthly expenses
+  const initialInvestment = (allCash ? price : down) + closingCosts + renovation + furnishing;  // used only in NPV and payback — never in monthly expenses
   const monthlyMtg    = allCash ? 0 : calcMortgage(principal, mortRate, termYrs);
   // Revenue fix: round at the monthly level so displayed nights × rate = displayed revenue
   const nightsPerMonth = Math.round(365 * occupancy / 12);
@@ -2524,7 +2536,7 @@ function calculate() {
       <div style="font-size:22px;font-weight:700;margin:6px 0">${paybackHtml}</div>
       <div style="font-size:12px;color:#6b7280;line-height:1.5">
         ${paybackYrs
-          ? `At ${fmtD(Math.abs(moNetCF))}/mo net cash flow, the ${fmtD(initialInvestment)} initial investment (down payment + closing costs) recovers in ${paybackYrs} years.`
+          ? `At ${fmtD(Math.abs(moNetCF))}/mo net cash flow, the ${fmtD(initialInvestment)} initial investment (down payment + closing costs + startup costs) recovers in ${paybackYrs} years.`
           : `Initial investment cannot recover until cash flow turns positive.`}
       </div>
     </div>
