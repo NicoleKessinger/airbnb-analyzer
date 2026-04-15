@@ -1679,6 +1679,10 @@ function goTo(n) {
     else if (i === n) s.classList.add('active');
   });
   // Step-specific on-enter actions
+  if (n === 0) {
+    // Entering Property: re-seed closing costs in case price was already set
+    updateClosingCostsDefault();
+  }
   if (n === 1) {
     // Entering Financing: seed down payment from price if not yet set
     syncDownFromPct();
@@ -2658,6 +2662,11 @@ function toggleExitSale() {
   const checked = document.getElementById('exitSaleToggle').checked;
   opts.classList.toggle('visible', checked);
 }
+
+// ── On page load: seed any defaults that depend on a restored price value ─────
+document.addEventListener('DOMContentLoaded', () => {
+  updateClosingCostsDefault();
+});
 </script>
 </body>
 </html>
