@@ -1426,100 +1426,50 @@
     <div class="step-header">
       <div class="step-eyebrow">Step 3 of 5</div>
       <div class="step-title">Estimate your monthly costs</div>
-      <div class="step-desc">We've pre-filled reasonable estimates for your market. Review and refine — or proceed as-is.</div>
+      <div class="step-desc">All values are per month. We've pre-filled reasonable estimates — edit any field directly.</div>
     </div>
     <div class="card">
-      <!-- Quick Estimate Preview (always visible) -->
-      <div class="card-title">Cost estimates <span class="field-badge estimated">estimated — refine below</span></div>
-      <div class="expense-preview" id="expensePreview">
-        <!-- populated by updateExpensePreview() when entering this step -->
-        <div class="expense-preview-item">
-          <div class="expense-preview-label">Insurance</div>
-          <div class="expense-preview-value" id="prev-insurance">$200/mo</div>
-          <div class="expense-preview-note">Estimated</div>
+      <div class="card-title">Fixed costs <span style="font-weight:400;text-transform:none;font-size:12px;color:#9ca3af;">— per month</span></div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Property tax ($/mo) <span class="field-badge estimated">estimated</span></label>
+          <input type="number" id="tax" value="" placeholder="e.g. 500" />
+          <span class="field-hint">Auto-estimated at 1.2% of price ÷ 12</span>
         </div>
-        <div class="expense-preview-item">
-          <div class="expense-preview-label">Property Tax</div>
-          <div class="expense-preview-value" id="prev-tax">—</div>
-          <div class="expense-preview-note">Estimated at 1.2% of price</div>
+        <div class="form-group">
+          <label>Insurance ($/mo) <span class="field-badge estimated">estimated</span></label>
+          <input type="number" id="insurance" value="" placeholder="e.g. 200" />
+          <span class="field-hint">Auto-estimated at 0.5% of price ÷ 12</span>
         </div>
-        <div class="expense-preview-item">
-          <div class="expense-preview-label">HOA / Maintenance</div>
-          <div class="expense-preview-value" id="prev-hoa">$0/mo</div>
-          <div class="expense-preview-note">Assumed none — adjust below</div>
+        <div class="form-group">
+          <label>HOA fee ($/mo)</label>
+          <input type="number" id="hoa" value="0" placeholder="0 if none" />
+          <span class="field-hint">Enter 0 if no HOA applies</span>
         </div>
-        <div class="expense-preview-item">
-          <div class="expense-preview-label">Management + Cleaning</div>
-          <div class="expense-preview-value" id="prev-mgmt">20% + $120/stay</div>
-          <div class="expense-preview-note">Standard STR management</div>
-        </div>
-        <div class="expense-preview-item">
-          <div class="expense-preview-label">Utilities &amp; Supplies</div>
-          <div class="expense-preview-value">$450/mo</div>
-          <div class="expense-preview-note">Auto-included in analysis</div>
+        <div class="form-group">
+          <label>Repairs &amp; upkeep ($/mo) <span class="field-badge estimated">estimated</span></label>
+          <input type="number" id="maintenance" value="200" placeholder="e.g. 200" />
+          <span class="field-hint">Pool, lawn, HVAC, minor repairs — est. $150–300/mo</span>
         </div>
       </div>
 
-      <!-- Refine toggle -->
-      <button class="refine-toggle" id="refineToggle" onclick="toggleRefine()">
-        ✎ Refine estimates (expand detailed inputs)
-        <span class="toggle-chevron">▾</span>
-      </button>
-
-      <!-- Detailed inputs: expandable -->
-      <div class="refine-section" id="refineSection">
-
-        <!-- Fixed Costs -->
-        <div class="expense-group">
-          <div class="expense-group-label">Fixed Costs</div>
-          <div class="form-grid">
-            <div class="form-group">
-              <label>Annual insurance ($) <span class="field-badge estimated">estimated</span></label>
-              <input type="number" id="insurance" value="2400" oninput="updateExpensePreview()" />
-              <span class="field-hint">~0.5% of purchase price per year</span>
-            </div>
-            <div class="form-group">
-              <label>Annual property tax ($) <span class="field-badge estimated">estimated</span></label>
-              <input type="number" id="tax" value="" placeholder="Auto-estimated from price" oninput="updateExpensePreview()" />
-              <span class="field-hint">~1.2% of purchase price per year</span>
-            </div>
-          </div>
+      <div class="card-title" style="margin-top:1.25rem">STR operating costs <span style="font-weight:400;text-transform:none;font-size:12px;color:#9ca3af;">— revenue-based</span></div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Management fee (%)</label>
+          <input type="number" id="mgmt" value="20" step="1" />
+          <span class="field-hint">Applied to rental revenue only — typically 20–25%</span>
         </div>
-
-        <!-- Variable Costs -->
-        <div class="expense-group">
-          <div class="expense-group-label">Variable Costs</div>
-          <div class="form-grid">
-            <div class="form-group">
-              <label>Management fee (%)</label>
-              <input type="number" id="mgmt" value="20" step="1" oninput="updateExpensePreview()" />
-              <span class="field-hint">Standard STR management: 20–25%</span>
-            </div>
-            <div class="form-group">
-              <label>Cleaning fee per stay ($)</label>
-              <input type="number" id="cleaning" value="120" oninput="updateExpensePreview()" />
-              <span class="field-hint">Charged to guests; offsets your cleaning cost</span>
-            </div>
-          </div>
+        <div class="form-group">
+          <label>Cleaning fee per stay ($)</label>
+          <input type="number" id="cleaning" value="120" />
+          <span class="field-hint">Charged to guests; offsets your cleaning cost</span>
         </div>
+      </div>
 
-        <!-- Optional -->
-        <div class="expense-group">
-          <div class="expense-group-label">Optional</div>
-          <div class="form-grid">
-            <div class="form-group">
-              <label>Monthly HOA fee ($)</label>
-              <input type="number" id="hoa" value="0" placeholder="0 if none" oninput="updateExpensePreview()" />
-            </div>
-            <div class="form-group">
-              <label>Monthly maintenance ($)</label>
-              <input type="number" id="maintenance" value="200" placeholder="pool, lawn, etc." oninput="updateExpensePreview()" />
-              <span class="field-hint">Pool, lawn care, repairs — estimate $150–300/mo</span>
-            </div>
-          </div>
-        </div>
-
-        <p style="font-size:12px;color:#9ca3af;margin-top:4px;line-height:1.5;">Utilities (~$300/mo) and supplies (~$150/mo) are included automatically.</p>
+      <div style="margin-top:1rem;padding:10px 14px;background:#f9fafb;border-radius:8px;font-size:12px;color:#6b7280;line-height:1.6;">
+        <strong style="color:#374151;">Also included automatically:</strong>
+        Utilities $300/mo · Supplies &amp; consumables $150/mo
       </div>
     </div>
 
@@ -1801,14 +1751,8 @@ function toggleDetails() {
   if (btn) { btn.classList.toggle('open', open); }
 }
 
-// ── Expenses refine-toggle ────────────────────────────────────────────────────
-function toggleRefine() {
-  const sec = document.getElementById('refineSection');
-  const btn = document.getElementById('refineToggle');
-  if (!sec) return;
-  const open = sec.classList.toggle('open');
-  if (btn) { btn.classList.toggle('open', open); }
-}
+// ── toggleRefine: no-op (refine section removed, all fields always visible) ──
+function toggleRefine() { /* no-op */ }
 
 // ── Down payment % ↔ $ sync ───────────────────────────────────────────────────
 function syncDownFromPct() {
@@ -1839,43 +1783,25 @@ function updateExpenseDefaults() {
   const price = parseFloat(document.getElementById('price').value) || 0;
   if (price <= 0) return;
 
-  // Property tax: estimate 1.2% of price annually if field is empty
+  // Property tax: estimate 1.2% of price / 12 (monthly) if field is empty
   const taxEl = document.getElementById('tax');
   if (!taxEl.value || taxEl.dataset.autoFilled === 'true') {
-    taxEl.value = Math.round(price * 0.012);
+    taxEl.value = Math.round(price * 0.012 / 12);
     taxEl.dataset.autoFilled = 'true';
     taxEl.classList.add('ai-filled');
   }
 
-  // Insurance: estimate 0.5% of price annually if still at default or empty
+  // Insurance: estimate 0.5% of price / 12 (monthly) if still at default or empty
   const insEl = document.getElementById('insurance');
-  const insDefault = Math.round(price * 0.005);
+  const insDefault = Math.round(price * 0.005 / 12);
   if (!insEl.value || insEl.dataset.autoFilled === 'true') {
-    insEl.value = Math.max(1200, insDefault);
+    insEl.value = Math.max(100, insDefault);
     insEl.dataset.autoFilled = 'true';
   }
 }
 
-// ── Update the quick-preview tiles on the Expenses step ──────────────────────
-function updateExpensePreview() {
-  const price       = parseFloat(document.getElementById('price').value)       || 0;
-  const insurance   = parseFloat(document.getElementById('insurance').value)   || 2400;
-  const tax         = parseFloat(document.getElementById('tax').value)         || Math.round(price * 0.012);
-  const hoa         = parseFloat(document.getElementById('hoa').value)         || 0;
-  const maintenance = parseFloat(document.getElementById('maintenance').value) || 200;
-  const mgmt        = parseFloat(document.getElementById('mgmt').value)        || 20;
-  const cleaning    = parseFloat(document.getElementById('cleaning').value)    || 120;
-
-  const prevIns  = document.getElementById('prev-insurance');
-  const prevTax  = document.getElementById('prev-tax');
-  const prevHoa  = document.getElementById('prev-hoa');
-  const prevMgmt = document.getElementById('prev-mgmt');
-
-  if (prevIns)  prevIns.textContent  = '$' + Math.round(insurance / 12).toLocaleString() + '/mo';
-  if (prevTax)  prevTax.textContent  = '$' + Math.round(tax / 12).toLocaleString() + '/mo';
-  if (prevHoa)  prevHoa.textContent  = '$' + (hoa + maintenance).toLocaleString() + '/mo';
-  if (prevMgmt) prevMgmt.textContent = mgmt + '% + $' + cleaning + '/stay';
-}
+// ── updateExpensePreview: no-op (preview tiles removed, inputs are now always visible) ──
+function updateExpensePreview() { /* no-op */ }
 
 // ── Live monthly revenue preview on the Revenue step ─────────────────────────
 function updateRevPreview() {
@@ -2096,7 +2022,7 @@ async function analyzeListing() {
     if (json.price)      { document.getElementById('price').value = json.price; document.getElementById('price').classList.add('ai-filled'); filled++; }
     if (json.bedrooms)   { document.getElementById('beds').value = Math.min(5, json.bedrooms); filled++; }
     if (json.city)       { document.getElementById('city').value = json.city; document.getElementById('city').classList.add('ai-filled'); filled++; }
-    if (json.annual_tax) { document.getElementById('tax').value = json.annual_tax; document.getElementById('tax').classList.add('ai-filled'); filled++; }
+    if (json.annual_tax) { document.getElementById('tax').value = Math.round(json.annual_tax / 12); document.getElementById('tax').classList.add('ai-filled'); filled++; }
     if (json.hoa_monthly && json.hoa_monthly > 0) {
       const hoaEl = document.getElementById('hoa');
       if (hoaEl) { hoaEl.value = json.hoa_monthly; hoaEl.classList.add('ai-filled'); filled++; }
@@ -2283,11 +2209,13 @@ function calculate() {
   const allCash  = document.getElementById('allCash')?.checked || false;
   const down         = allCash ? price : (parseFloat(document.getElementById('down').value) || price * 0.2);
   const closingCosts = parseFloat(document.getElementById('closingCosts').value) || 0;
-  const propTax  = parseFloat(document.getElementById('tax').value)        || 6000;
+  const moPropTaxIn  = parseFloat(document.getElementById('tax').value)       || 500;
+  const moInsuranceIn= parseFloat(document.getElementById('insurance').value) || 200;
+  const propTax  = moPropTaxIn * 12;
+  const insurance= moInsuranceIn * 12;
   const mortRate = parseFloat(document.getElementById('rate').value)       || 6.8;
   const termYrs  = parseInt(document.getElementById('term').value)         || 30;
   const extraPmt = parseFloat(document.getElementById('extra').value)      || 0;
-  const insurance= parseFloat(document.getElementById('insurance').value)  || 2400;
   const hoaMonthly  = parseFloat(document.getElementById('hoa').value)     || 0;
   const maintenance = parseFloat(document.getElementById('maintenance').value) || 0;
   const mgmtPct  = parseFloat(document.getElementById('mgmt').value) / 100 || 0.20;
@@ -2380,7 +2308,7 @@ function calculate() {
   const hoaRow = hoaMonthly > 0
     ? `<div class="cf-row"><span class="cfl">HOA fee</span><span class="cfv">−${fmtD(hoaMonthly)}</span></div>` : '';
   const maintenanceRow = maintenance > 0
-    ? `<div class="cf-row"><span class="cfl">Maintenance fees (pool, lawn, etc.)</span><span class="cfv">−${fmtD(maintenance)}</span></div>` : '';
+    ? `<div class="cf-row"><span class="cfl">Repairs &amp; upkeep</span><span class="cfv">−${fmtD(maintenance)}</span></div>` : '';
 
   // ── Verdict — NPV = Equity Value − initialInvestment (equity basis)
   // CoC and cap rate are display-only; they do not affect the verdict outcome.
@@ -2405,8 +2333,8 @@ function calculate() {
   const moRentalRev    = grossRev / 12;  // = nightsPerMonth × nightlyRate (exact)
   const moCleanRev     = cleaningRev / 12;
   const moTotalRev     = totalRev / 12;
-  const moPropTax      = propTax / 12;
-  const moInsurance    = insurance / 12;
+  const moPropTax      = moPropTaxIn;
+  const moInsurance    = moInsuranceIn;
   const moMgmt         = mgmtFee / 12;
   const moTotalExp     = totalExp / 12;
   const moNetCF        = annualCF / 12;
@@ -2507,7 +2435,7 @@ function calculate() {
       ${hoaRow}${maintenanceRow}
       <div class="cf-row"><span class="cfl">Management fee (${Math.round(mgmtPct*100)}% of rental revenue)</span><span class="cfv">−${fmtD(moMgmt)}</span></div>
       <div class="cf-row"><span class="cfl">Utilities (est.)</span><span class="cfv">−$300</span></div>
-      <div class="cf-row"><span class="cfl">Supplies &amp; maintenance (est.)</span><span class="cfv">−$150</span></div>
+      <div class="cf-row"><span class="cfl">Supplies &amp; consumables (est.)</span><span class="cfv">−$150</span></div>
       <div class="cf-divider"><span>Total monthly expenses</span><span>−${fmtD(moTotalExp)}</span></div>
       <div class="cf-net ${netCls}">
         <span class="cf-net-lbl">Net monthly cash flow</span>
