@@ -1351,9 +1351,9 @@
           <span class="field-hint">Used to fetch live market rates in Step 4</span>
         </div>
         <div class="form-group">
-          <label>Closing costs ($)</label>
-          <input type="number" id="closingCosts" value="" placeholder="e.g. 9700 (≈2%)" />
-          <span class="field-hint">Title, origination fees, etc. — included in initial investment</span>
+          <label>Closing costs ($) <span class="field-badge estimated">estimated</span></label>
+          <input type="number" id="closingCosts" value="" placeholder="e.g. 19400 (≈4%)" oninput="this.dataset.autoFilled='false'" />
+          <span class="field-hint">Auto-estimated at 4% of price — title, origination fees, etc.</span>
         </div>
         <div class="form-group">
           <label>Renovation budget ($)</label>
@@ -1790,8 +1790,20 @@ function syncDownFromAmt() {
 // ── Called when price changes: re-sync down $ and expense defaults ────────────
 function onPriceChange() {
   syncDownFromPct();
+  updateClosingCostsDefault();
   updateExpenseDefaults();
   updateExpensePreview();
+}
+
+function updateClosingCostsDefault() {
+  const price = parseFloat(document.getElementById('price').value) || 0;
+  if (price <= 0) return;
+  const el = document.getElementById('closingCosts');
+  if (!el.value || el.dataset.autoFilled === 'true') {
+    el.value = Math.round(price * 0.04);
+    el.dataset.autoFilled = 'true';
+    el.classList.add('ai-filled');
+  }
 }
 
 // ── Populate expense defaults from price (called when entering Step 3) ────────
