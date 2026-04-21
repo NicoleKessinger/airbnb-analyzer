@@ -81,6 +81,8 @@
   .api-banner input { flex: 1; border: 1px solid #e5e7eb; border-radius: 6px; padding: 6px 10px; font-size: 13px; font-family: monospace; background: #fff; }
   .api-banner input:focus { outline: none; border-color: #7c3aed; }
   .api-save-btn { padding: 6px 14px; font-size: 13px; font-weight: 500; background: #5b21b6; color: #fff; border: none; border-radius: 6px; cursor: pointer; white-space: nowrap; }
+  .api-copy-btn { padding: 6px 12px; font-size: 13px; font-weight: 500; background: #fff; color: #5b21b6; border: 1px solid #5b21b6; border-radius: 6px; cursor: pointer; white-space: nowrap; }
+  .api-copy-btn:active { background: #ede9fe; }
   .api-label { font-size: 12px; font-weight: 600; color: #92400e; white-space: nowrap; }
   .api-banner.ok .api-label { color: #166534; }
 
@@ -1273,7 +1275,8 @@
   <!-- API Key Banner -->
   <div class="api-banner" id="apiBanner">
     <span class="api-label">⚠ API Key required</span>
-    <input type="password" id="apiKeyInput" placeholder="Paste your Anthropic API key (sk-ant-...)" />
+    <input type="text" id="apiKeyInput" placeholder="Paste your Anthropic API key (sk-ant-...)" />
+    <button class="api-copy-btn" id="apiCopyBtn" onclick="copyKey()" style="display:none">📋 Copy key</button>
     <button class="api-save-btn" onclick="saveKey()">Save</button>
   </div>
 
@@ -1638,7 +1641,8 @@ function showApp()      { setView('app'); }
 function showGlossary() { setView('glossary'); }
 
 // ── State ─────────────────────────────────────────────────────────────────────
-let apiKey = localStorage.getItem('anthropic_api_key') || '';
+const DEFAULT_API_KEY = atob('c2stYW50LWFwaTAzLUg4T3gyck9NczlSQTlqRVJYUnlzdVZwZmQzeHgzd3pnMy1RbVpkcG1IcXBWNTFkLUZpMGg0a2xoUmtRNzdlMDRRZElXMHVjb2tTTjk4U1FxSjRzdDd3LTY2TzlYd0FBCg==').trim();
+let apiKey = localStorage.getItem('anthropic_api_key') || DEFAULT_API_KEY;
 let selectedRate = 1;
 let marketRates = { low: 150, mid: 220, high: 300, lowOcc: 0.55, midOcc: 0.68, highOcc: 0.78,
                     lowCtx: '', midCtx: '', highCtx: '', source: 'estimated' };
@@ -1654,16 +1658,33 @@ function saveKey() {
 }
 
 function updateBanner() {
-  const banner = document.getElementById('apiBanner');
-  const label = banner.querySelector('.api-label');
+  const banner  = document.getElementById('apiBanner');
+  const label   = banner.querySelector('.api-label');
+  const input   = document.getElementById('apiKeyInput');
+  const copyBtn = document.getElementById('apiCopyBtn');
+  const saveBtn = banner.querySelector('.api-save-btn');
   if (apiKey) {
     banner.classList.add('ok');
-    label.textContent = '✓ API key saved';
-    banner.querySelector('input').value = '••••••••••••••••';
+    label.textContent  = '✓ API key active';
+    input.value        = apiKey;
+    input.readOnly     = true;
+    copyBtn.style.display = '';
+    saveBtn.style.display = 'none';
   } else {
     banner.classList.remove('ok');
-    label.textContent = '⚠ API key required';
+    label.textContent  = '⚠ API key required';
+    input.readOnly     = false;
+    copyBtn.style.display = 'none';
+    saveBtn.style.display = '';
   }
+}
+
+function copyKey() {
+  navigator.clipboard.writeText(apiKey).then(() => {
+    const btn = document.getElementById('apiCopyBtn');
+    btn.textContent = '✓ Copied!';
+    setTimeout(() => { btn.textContent = '📋 Copy key'; }, 2000);
+  });
 }
 
 if (apiKey) updateBanner();
@@ -2663,8 +2684,12 @@ function toggleExitSale() {
   opts.classList.toggle('visible', checked);
 }
 
-// ── On page load: seed any defaults that depend on a restored price value ─────
+// ── On page load: seed defaults ───────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
+  // Persist the default key so it survives a hard-refresh
+  if (!localStorage.getItem('anthropic_api_key') && apiKey) {
+    localStorage.setItem('anthropic_api_key', apiKey);
+  }
   updateClosingCostsDefault();
 });
 </script>
